@@ -113,6 +113,61 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	    変数を作り、初期値を入れる
 	----------------------------*/
 
+	/*   ゲーム   */
+
+	// 画面の種類
+	enum SCREEN_TYPE
+	{
+		SCREEN_TYPE_START,
+		SCREEN_TYPE_GAME
+	};
+
+	// 現在の画面
+	int screenNo = SCREEN_TYPE_START;
+
+	// スタート画面の種類
+	enum START_TYPE
+	{
+		START_TYPE_ORPNING,
+		START_TYPE_STAGE_SELECT
+	};
+
+	// 現在のスタート画面
+	int startNo = START_TYPE_ORPNING;
+
+	// メニューの種類
+	enum MENU_TYPE
+	{
+		MENU_TYPE_START,
+		MENU_TYPE_STAGE_1,
+		MENU_TYPE_STAGE_2,
+		MENU_TYPE_STAGE_3
+	};
+
+	// 現在のメニュー
+	int menuNo = MENU_TYPE_START;
+
+	// ステージの種類
+	enum STAGE_TYPE
+	{
+		STAGE_TYPE_1,
+		STAGE_TYPE_2,
+		STAGE_TYPE_3
+	};
+
+	// 現在のステージ
+	int stageNo = -1;
+
+
+	// ゲームフレーム
+	int gameFrame = 0;
+
+	// ゲームが動いているかどうか（ゲームフラグ）
+	int isGameOperation = false;
+
+
+
+
 	/*   プレイヤー   */
 
 	// 構造体
@@ -124,7 +179,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 位置
 	player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
-	player.pos.screen = { 0.0f , 0.0f };
+	player.pos.screen = CoordinateTransformation(player.pos.world);
 
 	// 移動速度
 	player.vel = { 0.0f , 0.0f };
@@ -148,6 +203,284 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
+
+		// 画面切り替え
+		switch (screenNo)
+		{
+		case SCREEN_TYPE_START:
+
+			///
+			/// ↓ スタート画面ここから
+			/// 
+
+			// ゲームが動いている（ゲームフラグがtrueである）ときに、ゲームフレームを動かす
+			if (isGameOperation)
+			{
+				gameFrame++;
+			}
+
+			// スタート画面切り替え
+			switch (startNo)
+			{
+			case START_TYPE_ORPNING:
+
+				/*   オープニング画面   */
+
+				if (menuNo == MENU_TYPE_START)
+				{
+					// スペースキーを押すと、ステージセレクトに切り替わる
+
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						// ゲームが動いていない（ゲームフラグがfalseである）とき
+						if (isGameOperation == false)
+						{
+							// ゲームが動く（ゲームフラグがtrueになる）
+							isGameOperation = true;
+						}
+					}
+
+					// ゲームが動いている（ゲームフラグがtrueである）とき
+					if (isGameOperation)
+					{
+						if (isGameOperation >= 30)
+						{
+							// ステージセレクトに切り替わる
+							startNo = START_TYPE_STAGE_SELECT;
+
+							// ステージ1を選ぶ
+							menuNo = MENU_TYPE_STAGE_1;
+
+
+							// ゲームが止まる（ゲームフラグがfalseになる）
+							isGameOperation = false;
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+						}
+					}
+
+				}
+
+
+				break;
+
+			case START_TYPE_STAGE_SELECT:
+
+				/*   ステージセレクト   */
+
+				// メニュー切り替え
+				switch (menuNo)
+				{
+				case MENU_TYPE_STAGE_1:
+
+					// スペースキーでゲームを開始する
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						// ゲームが動いていない（ゲームフラグがfalseである）とき
+						if (isGameOperation == false)
+						{
+							// ゲームが動く（ゲームフラグがtrueになる）
+							isGameOperation = true;
+						}
+					}
+
+					// ゲームが動いている（ゲームフラグがtrueである）とき
+					if (isGameOperation)
+					{
+						if (isGameOperation >= 70)
+						{
+							// ゲーム画面に切り替わる
+							screenNo = SCREEN_TYPE_GAME;
+
+							// ステージ1を選ぶ
+							stageNo = STAGE_TYPE_1;
+
+
+							// オープニング画面に切り替わる
+							startNo = START_TYPE_ORPNING;
+
+							// スタートボタンを選ぶ
+							menuNo = MENU_TYPE_START;
+
+
+							// ゲームが止まる（ゲームフラグがfalseになる）
+							isGameOperation = false;
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+						}
+					}
+
+
+					// S or ↓ でステージ2を選ぶ
+					if (!preKeys[DIK_S] && keys[DIK_S] || !preKeys[DIK_DOWN] && keys[DIK_DOWN])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_2;
+						}
+					}
+
+					break;
+
+				case MENU_TYPE_STAGE_2:
+
+					// スペースキーでゲームを開始する
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						// ゲームが動いていない（ゲームフラグがfalseである）とき
+						if (isGameOperation == false)
+						{
+							// ゲームが動く（ゲームフラグがtrueになる）
+							isGameOperation = true;
+						}
+					}
+
+					// ゲームが動いている（ゲームフラグがtrueである）とき
+					if (isGameOperation)
+					{
+						if (isGameOperation >= 70)
+						{
+							// ゲーム画面に切り替わる
+							screenNo = SCREEN_TYPE_GAME;
+
+							// ステージ1を選ぶ
+							stageNo = STAGE_TYPE_2;
+
+
+							// オープニング画面に切り替わる
+							startNo = START_TYPE_ORPNING;
+
+							// スタートボタンを選ぶ
+							menuNo = MENU_TYPE_START;
+
+
+							// ゲームが止まる（ゲームフラグがfalseになる）
+							isGameOperation = false;
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+						}
+					}
+
+
+					// W or ↑ でステージ1を選ぶ
+					if (!preKeys[DIK_W] && keys[DIK_W] || !preKeys[DIK_UP] && keys[DIK_UP])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_1;
+						}
+					}
+
+					// S or ↓ でステージ3を選ぶ
+					if (!preKeys[DIK_S] && keys[DIK_S] || !preKeys[DIK_DOWN] && keys[DIK_DOWN])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_3;
+						}
+					}
+
+					break;
+
+				case MENU_TYPE_STAGE_3:
+
+					// スペースキーでゲームを開始する
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						// ゲームが動いていない（ゲームフラグがfalseである）とき
+						if (isGameOperation == false)
+						{
+							// ゲームが動く（ゲームフラグがtrueになる）
+							isGameOperation = true;
+						}
+					}
+
+					// ゲームが動いている（ゲームフラグがtrueである）とき
+					if (isGameOperation)
+					{
+						if (isGameOperation >= 70)
+						{
+							// ゲーム画面に切り替わる
+							screenNo = SCREEN_TYPE_GAME;
+
+							// ステージ1を選ぶ
+							stageNo = STAGE_TYPE_3;
+
+
+							// オープニング画面に切り替わる
+							startNo = START_TYPE_ORPNING;
+
+							// スタートボタンを選ぶ
+							menuNo = MENU_TYPE_START;
+
+
+							// ゲームが止まる（ゲームフラグがfalseになる）
+							isGameOperation = false;
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+						}
+					}
+
+
+					// W or ↑ でステージ2を選ぶ
+					if (!preKeys[DIK_W] && keys[DIK_W] || !preKeys[DIK_UP] && keys[DIK_UP])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_2;
+						}
+					}
+
+					break;
+				}
+
+
+				break;
+			}
+
+			///
+			/// ↑ スタート画面ここまで
+			/// 
+
+			break;
+
+		case SCREEN_TYPE_GAME:
+
+			///
+			/// ↓ ゲーム画面ここから
+			/// 
+
+			/*-----------------------
+			    ステージを設定する1
+			-----------------------*/
+
+			switch (stageNo)
+			{
+			case STAGE_TYPE_1:
+
+				break;
+
+			case STAGE_TYPE_2:
+
+				break;
+
+			case STAGE_TYPE_3:
+
+				break;
+			}
+
+
+			///
+			/// ↑ ゲーム画面ここまで
+			/// 
+
+			break;
+		}
+
 
 		///
 		/// ↑更新処理ここまで
