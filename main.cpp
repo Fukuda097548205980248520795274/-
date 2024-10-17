@@ -15,7 +15,7 @@ struct Coordinate2
 };
 
 // 位置
-struct Pos2
+struct Pos
 {
 	// ワールド座標
 	struct Coordinate2 world;
@@ -39,7 +39,7 @@ struct Acceleration2
 };
 
 // 図形の半径
-struct Radius
+struct Radius2
 {
 	float x;
 	float y;
@@ -53,6 +53,25 @@ struct Respawn
 
 	// 復活処理
 	int timer;
+};
+
+// プレイヤー
+struct Player
+{
+	// 復活
+	struct Respawn respawn;
+
+	// 位置
+	struct Pos pos;
+
+	// 移動速度
+	struct Vel2 vel;
+
+	// 加速度
+	struct Acceleration2 acceleration;
+
+	// 図形の半径
+	struct Radius2 radius;
 };
 
 
