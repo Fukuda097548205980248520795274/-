@@ -2,11 +2,22 @@
 
 const char kWindowTitle[] = "LC1C_20_フクダソウワ_ピカピカ風船";
 
+/*----------------
+    定数を作る
+----------------*/
+
+// 縦幅
+const int KHeight = 800;
+
+// 横幅
+const int kWidth = 700;
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	Novice::Initialize(kWindowTitle, kWidth, KHeight);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
