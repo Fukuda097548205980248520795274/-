@@ -96,6 +96,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
+
+	/*----------------------------
+	    変数を作り、初期値を入れる
+	----------------------------*/
+
+	/*   プレイヤー   */
+
+	// 構造体
+	struct Player player;
+
+	// 復活
+	player.respawn.isRespawn = false;
+	player.respawn.timer = 120;
+
+	// 位置
+	player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
+	player.pos.screen = { 0.0f , 0.0f };
+
+	// 移動速度
+	player.vel = { 0.0f , 0.0f };
+
+	// 加速度
+	player.acceleration = { 0.0f , 0.0f };
+
+	// 図形の半径
+	player.radius = { 0.0f , 0.0f };
+
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
