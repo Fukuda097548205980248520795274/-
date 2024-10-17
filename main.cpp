@@ -24,6 +24,37 @@ struct Pos2
 	struct Coordinate2 screen;
 };
 
+// 移動速度
+struct Vel2
+{
+	float x;
+	float y;
+};
+
+// 加速度
+struct Acceleration2
+{
+	float x;
+	float y;
+};
+
+// 図形の半径
+struct Radius
+{
+	float x;
+	float y;
+};
+
+// 復活
+struct Respawn
+{
+	// 復活しているかどうか（復活フラグ）
+	int isRespawn;
+
+	// 復活処理
+	int timer;
+};
+
 
 /*----------------
     定数を作る
