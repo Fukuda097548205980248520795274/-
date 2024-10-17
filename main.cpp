@@ -45,6 +45,13 @@ struct Radius2
 	float y;
 };
 
+// フラグ
+struct Flug
+{
+	// 飛んでいるかどうか（飛行フラグ）
+	int isFlying;
+};
+
 // 復活
 struct Respawn
 {
@@ -60,6 +67,9 @@ struct Player
 {
 	// 復活
 	struct Respawn respawn;
+
+	// フラグ
+	struct Flug flug;
 
 	// 位置
 	struct Pos pos;
@@ -102,6 +112,19 @@ struct Coordinate2 CoordinateTransformation(struct Coordinate2 world);
 /// </summary>
 /// <param name="respawn">復活</param>
 void RespawnProcess(struct Respawn* respawn);
+
+/// <summary>
+/// プレイヤーの初期位置を決める
+/// </summary>
+/// <param name="player">プレイヤー</param>
+void PlayerInitialState(struct Player* player);
+
+/// <summary>
+/// プレイヤーの操作を行う
+/// </summary>
+/// <param name="player">プレイヤー</param>
+/// <param name="keys">キー</param>
+void PlayerMove(struct Player* player , char* keys);
 
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -182,6 +205,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 復活
 	player.respawn.isRespawn = false;
 	player.respawn.timer = 120;
+
+	// フラグ
+	player.flug.isFlying = false;
 
 	// 位置
 	player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
@@ -302,6 +328,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							// ステージ1を選ぶ
 							stageNo = STAGE_TYPE_1;
 
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
+
 
 							// オープニング画面に切り替わる
 							startNo = START_TYPE_ORPNING;
@@ -353,6 +382,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 							// ステージ1を選ぶ
 							stageNo = STAGE_TYPE_2;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
 
 
 							// オープニング画面に切り替わる
@@ -414,6 +446,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 							// ステージ1を選ぶ
 							stageNo = STAGE_TYPE_3;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
 
 
 							// オープニング画面に切り替わる
@@ -478,6 +513,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				break;
 			}
+
+
+			/*--------------------
+			    プレイヤーの操作
+			--------------------*/
+
+			// プレイヤーの操作
+			PlayerMove(&player , keys);
 
 
 			///
@@ -593,5 +636,38 @@ void RespawnProcess(struct Respawn* respawn)
 			// 復活処理が初期化される
 			respawn->timer = 120;
 		}
+	}
+}
+
+/// <summary>
+/// プレイヤーの初期位置を決める
+/// </summary>
+/// <param name="player">プレイヤー</param>
+void PlayerInitialState(struct Player* player)
+{
+	// nullを探す
+	if (player == nullptr)
+	{
+		return;
+	}
+
+	// 位置
+	player->pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
+
+	// 復活させる（復活フラグをtrueにする）
+	player->respawn.isRespawn = true;
+}
+
+/// <summary>
+/// プレイヤーの操作を行う
+/// </summary>
+/// <param name="player">プレイヤー</param>
+/// <param name="keys">キー</param>
+void PlayerMove(struct Player* player, char* keys)
+{
+	// nullを探す
+	if (player == nullptr || keys == nullptr)
+	{
+		return;
 	}
 }
