@@ -1,6 +1,29 @@
 #include <Novice.h>
 
-const char kWindowTitle[] = "LC1C_20_フクダソウワ_ピカピカ風船";
+const char kWindowTitle[] = "LC1C_20_フクダソウワ_ヒカリウム";
+
+
+/*-----------------
+    構造体を作る
+-----------------*/
+
+// 座標
+struct Coordinate2
+{
+	float x;
+	float y;
+};
+
+// 位置
+struct Pos2
+{
+	// ワールド座標
+	struct Coordinate2 world;
+
+	// スクリーン座標
+	struct Coordinate2 screen;
+};
+
 
 /*----------------
     定数を作る
