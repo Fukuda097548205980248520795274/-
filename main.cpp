@@ -249,7 +249,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					// ゲームが動いている（ゲームフラグがtrueである）とき
 					if (isGameOperation)
 					{
-						if (isGameOperation >= 30)
+						if (gameFrame >= 30)
 						{
 							// ステージセレクトに切り替わる
 							startNo = START_TYPE_STAGE_SELECT;
@@ -294,7 +294,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					// ゲームが動いている（ゲームフラグがtrueである）とき
 					if (isGameOperation)
 					{
-						if (isGameOperation >= 70)
+						if (gameFrame >= 70)
 						{
 							// ゲーム画面に切り替わる
 							screenNo = SCREEN_TYPE_GAME;
@@ -346,7 +346,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					// ゲームが動いている（ゲームフラグがtrueである）とき
 					if (isGameOperation)
 					{
-						if (isGameOperation >= 70)
+						if (gameFrame >= 70)
 						{
 							// ゲーム画面に切り替わる
 							screenNo = SCREEN_TYPE_GAME;
@@ -407,7 +407,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					// ゲームが動いている（ゲームフラグがtrueである）とき
 					if (isGameOperation)
 					{
-						if (isGameOperation >= 70)
+						if (gameFrame >= 70)
 						{
 							// ゲーム画面に切り替わる
 							screenNo = SCREEN_TYPE_GAME;
@@ -516,6 +516,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///
 			/// ↓ ゲーム画面ここから
 			/// 
+
+			/*------------------------
+			    図形や画像を描画する
+			------------------------*/
+
+			// 背景
+			Novice::DrawBox(0,0,kWidth,KHeight , 0.0f , 0x000055FF , kFillModeSolid);
+
 
 			///
 			/// ↑ ゲーム画面ここまで
