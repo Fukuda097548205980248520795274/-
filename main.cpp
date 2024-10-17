@@ -86,6 +86,18 @@ const int KHeight = 800;
 const int kWidth = 700;
 
 
+/*---------------
+    関数を作る
+---------------*/
+
+/// <summary>
+/// 座標変換を行う
+/// </summary>
+/// <param name="world">ワールド座標</param>
+/// <returns>座標変換を行った構造体を返却する</returns>
+struct Coordinate2 CoordinateTransformation(struct Coordinate2 world);
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -161,4 +173,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ライブラリの終了
 	Novice::Finalize();
 	return 0;
+}
+
+/// <summary>
+/// 座標変換を行う
+/// </summary>
+/// <param name="world">ワールド座標</param>
+/// <returns>座標変換を行った構造体を返却する</returns>
+struct Coordinate2 CoordinateTransformation(struct Coordinate2 world)
+{
+	// 構造体
+	struct Coordinate2 screen;
+
+	screen.x = world.x;
+	screen.y = -world.y + static_cast<float>(KHeight) - 100.0f;
+
+	return screen;
 }
