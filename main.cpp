@@ -97,6 +97,12 @@ const int kWidth = 700;
 /// <returns>座標変換を行った構造体を返却する</returns>
 struct Coordinate2 CoordinateTransformation(struct Coordinate2 world);
 
+/// <summary>
+/// 復活処理を行う
+/// </summary>
+/// <param name="respawn">復活</param>
+void RespawnProcess(struct Respawn* respawn);
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -490,6 +496,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
+
+		switch (screenNo)
+		{
+		case SCREEN_TYPE_START:
+
+			///
+			/// ↓ スタート画面ここから
+			/// 
+
+			///
+			/// ↑ スタート画面ここまで
+			/// 
+
+			break;
+
+		case SCREEN_TYPE_GAME:
+
+			///
+			/// ↓ ゲーム画面ここから
+			/// 
+
+			///
+			/// ↑ ゲーム画面ここまで
+			/// 
+
+			break;
+		}
+
+
 		///
 		/// ↑描画処理ここまで
 		///
@@ -508,6 +543,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	return 0;
 }
 
+
 /// <summary>
 /// 座標変換を行う
 /// </summary>
@@ -522,4 +558,32 @@ struct Coordinate2 CoordinateTransformation(struct Coordinate2 world)
 	screen.y = -world.y + static_cast<float>(KHeight) - 100.0f;
 
 	return screen;
+}
+
+/// <summary>
+/// 復活処理を行う
+/// </summary>
+/// <param name="respawn">復活</param>
+void RespawnProcess(struct Respawn* respawn)
+{
+	// nullを探す
+	if (respawn == nullptr)
+	{
+		return;
+	}
+
+	// やられている（復活フラグがfalseである）ときに、復活処理を行う
+	if(respawn->isRespawn == false)
+	{
+		respawn->timer--;
+
+		if (respawn->timer <= 0)
+		{
+			// 復活する（復活フラグがtrueになる）
+			respawn->isRespawn = true;
+
+			// 復活処理が初期化される
+			respawn->timer = 120;
+		}
+	}
 }
