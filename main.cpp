@@ -84,6 +84,31 @@ struct Player
 	struct Radius2 radius;
 };
 
+// 敵
+struct Enemy
+{
+	// 復活
+	struct Respawn respawn;
+
+	// 出現しているかどうか（出現フラグ）
+	int isArrival;
+
+	// 位置
+	struct Pos pos;
+
+	// 移動速度
+	struct Vel2 vel;
+
+	// 加速度
+	struct Acceleration2 acceleration;
+
+	// 図形の半径
+	struct Radius2 radius;
+
+	// 透明度
+	int transparency;
+};
+
 
 /*----------------
     定数を作る
@@ -214,7 +239,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	player.pos.screen = CoordinateTransformation(player.pos.world);
 
 	// 移動速度
-	player.vel = { 0.0f , 0.0f };
+	player.vel = { 0.0f , 3.0f };
 
 	// 加速度
 	player.acceleration = { 0.0f , 0.0f };
@@ -523,6 +548,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			PlayerMove(&player , keys);
 
 
+			/*-------------
+			    座標変換
+			-------------*/
+
+			// プレイヤー
+			player.pos.screen = CoordinateTransformation(player.pos.world);
+
+
 			///
 			/// ↑ ゲーム画面ここまで
 			/// 
@@ -566,6 +599,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 背景
 			Novice::DrawBox(0,0,kWidth,KHeight , 0.0f , 0x000055FF , kFillModeSolid);
+
+			
+			/*   プレイヤー   */
+
+			// 復活している（復活フラグがtrueである）とき
+			if (player.respawn.isRespawn)
+			{
+				Novice::DrawEllipse
+				(
+					static_cast<int>(player.pos.screen.x) , static_cast<int>(player.pos.screen.y),
+					static_cast<int>(player.radius.x) , static_cast<int>(player.radius.y) ,
+					0.0f , 0xFFFFFFFF , kFillModeSolid
+				);
+			}
 
 
 			///
@@ -651,11 +698,15 @@ void PlayerInitialState(struct Player* player)
 		return;
 	}
 
-	// 位置
-	player->pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
 
 	// 復活させる（復活フラグをtrueにする）
 	player->respawn.isRespawn = true;
+
+	// 位置
+	player->pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
+
+	// 図形の半径
+	player->radius = { 10.0f , 10.0f };
 }
 
 /// <summary>
@@ -669,5 +720,135 @@ void PlayerMove(struct Player* player, char* keys)
 	if (player == nullptr || keys == nullptr)
 	{
 		return;
+	}
+
+
+	/*   飛行   */
+
+	// スペースキーを押すと、飛行できる（飛行フラグがtrueになる）
+	if (keys[DIK_SPACE])
+	{
+		player->flug.isFlying = true;
+	}
+	else
+	{
+		// スペースキーを押さないと、飛行しない（飛行フラグがfalseになる）
+		player->flug.isFlying = false;
+	}
+
+	// 飛行する（飛行フラグがtrueである）と、上昇できる
+	if (player->flug.isFlying)
+	{
+		if (player->acceleration.y < 1.0f)
+		{
+			player->acceleration.y += 0.1f;
+		}
+
+
+		// 風船が膨らむ
+		if (player->radius.x < 40.0f)
+		{
+			player->radius.x += 1.0f;
+		}
+
+		if (player->radius.y < 40.0f)
+		{
+			player->radius.y += 1.0f;
+		}
+	}
+	else
+	{
+		// 飛行しない（飛行フラグがfalseである）と、降下できる
+		if (player->acceleration.y > -1.0f)
+		{
+			player->acceleration.y += -0.1f;
+		}
+
+
+		// 風船が縮む
+		if (player->radius.x > 10.0f)
+		{
+			player->radius.x += -1.0f;
+		}
+		else
+		{
+			player->radius.x = 10.0f;
+		}
+
+		if (player->radius.y > 10.0f)
+		{
+			player->radius.y += -1.0f;
+		}
+		else
+		{
+			player->radius.y = 10.0f;
+		}
+	}
+
+
+	/*   横移動   */
+
+	// 移動速度を初期化する
+	player->vel.x = 0.0f;
+
+	// 飛行中（飛行フラグがtrueであるとき）に、Aキーを押すと、左に移動する
+	if (keys[DIK_A])
+	{
+		if (player->flug.isFlying)
+		{
+			if (player->pos.world.x - player->radius.x > 0.0f)
+			{
+				player->vel.x = -4.0f;
+			}
+		}
+	}
+
+	// 飛行中（飛行フラグがtrueであるとき）に、Dキーを押すと、右に移動する
+	if (keys[DIK_D])
+	{
+		if (player->flug.isFlying)
+		{
+			if (player->pos.world.x + player->radius.x < static_cast<float>(KHeight))
+			{
+				player->vel.x = 4.0f;
+			}
+		}
+	}
+
+	// 飛行中（飛行フラグがtrueであるとき）に、Sキーを押すと、上昇、移動しない
+	if (keys[DIK_S])
+	{
+		if (player->flug.isFlying)
+		{
+			player->acceleration.y = 0.0f;
+
+			player->vel.x = 0.0f;
+		}
+	}
+
+	// プレイヤーを動かす
+	player->pos.world.x += player->vel.x;
+	player->pos.world.y += player->vel.y * player->acceleration.y;
+
+
+	// プレイヤーが画面外に出ないようにする
+	if (player->pos.world.x - player->radius.x < 0.0f)
+	{
+		player->pos.world.x = player->radius.x;
+	}
+
+	if (player->pos.world.x + player->radius.x > static_cast<float>(kWidth))
+	{
+		player->pos.world.x = static_cast<float>(kWidth) - player->radius.x;
+	}
+
+	if (player->pos.world.y - player->radius.y < 0.0f)
+	{
+		player->pos.world.y = player->radius.y;
+	}
+
+	if (player->pos.world.y + player->radius.y > static_cast<float>(KHeight) - 100.0f)
+	{
+		player->pos.world.y = static_cast<float>(KHeight) - 100.0f - player->radius.y;
 	}
 }
