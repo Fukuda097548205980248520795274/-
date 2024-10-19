@@ -158,6 +158,17 @@ void PlayerInitialState(struct Player* player);
 /// <param name="keys">キー</param>
 void PlayerMove(struct Player* player , char* keys);
 
+/// <summary>
+/// 敵を作る
+/// </summary>
+/// <param name="enemy">敵</param>
+/// <param name="posX">X軸の位置</param>
+/// <param name="posY">Y軸の位置</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float velY, float radius);
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -570,6 +581,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 			case STAGE_TYPE_1:
 
+				if (gameFrame == 0)
+				{
+					MakeEnemy(enemy , 200.0f , 200.0f , 0.0f , 0.0f , 30.0f);
+				}
+
 				break;
 
 			case STAGE_TYPE_2:
@@ -579,6 +595,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			case STAGE_TYPE_3:
 
 				break;
+			}
+
+			gameFrame++;
+
+
+			/*--------------
+			    復活処理
+			--------------*/
+
+			// プレイヤー
+			RespawnProcess(&player.respawn);
+
+			// 敵
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				RespawnProcess(&enemy[i].respawn);
 			}
 
 
@@ -596,6 +628,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// プレイヤー
 			player.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 敵
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				enemy[i].pos.screen = CoordinateTransformation(enemy[i].pos.world);
+			}
 
 
 			///
@@ -654,6 +692,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					static_cast<int>(player.radius.x) , static_cast<int>(player.radius.y) ,
 					0.0f , 0xFFFFFFFF , kFillModeSolid
 				);
+			}
+
+
+			/*   敵   */
+
+			// 出現している（出現フラグがtrueである）とき
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				if (enemy[i].isArrival)
+				{
+					Novice::DrawEllipse
+					(
+						static_cast<int>(enemy[i].pos.screen.x) , static_cast<int>(enemy[i].pos.screen.y),
+						static_cast<int>(enemy[i].radius.x) , static_cast<int>(enemy[i].radius.y),
+						0.0f , 0xFFFFFFFF , kFillModeSolid
+					);
+				}
 			}
 
 
@@ -892,5 +947,46 @@ void PlayerMove(struct Player* player, char* keys)
 	if (player->pos.world.y + player->radius.y > static_cast<float>(KHeight) - 100.0f)
 	{
 		player->pos.world.y = static_cast<float>(KHeight) - 100.0f - player->radius.y;
+	}
+}
+
+/// <summary>
+/// 敵を作る
+/// </summary>
+/// <param name="enemy">敵</param>
+/// <param name="posX">X軸の位置</param>
+/// <param name="posY">Y軸の位置</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float velY, float radius)
+{
+	// nullを探す
+	if (enemy == nullptr)
+	{
+		return;
+	}
+
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		if (enemy[i].isArrival == false)
+		{
+			// 敵を出現させる（出現フラグがtrueになる）
+			enemy[i].isArrival = true;
+
+			// 位置
+			enemy[i].pos.world = { posX , posY };
+
+			// 移動速度
+			enemy[i].vel = { velX , velY };
+
+			// 加速度
+			enemy[i].acceleration = { 1.0f , 1.0f };
+
+			// 図形の半径
+			enemy[i].radius = { radius , radius };
+
+			break;
+		}
 	}
 }
