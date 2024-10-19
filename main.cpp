@@ -198,6 +198,17 @@ void PlayerMove(struct Player* player , char* keys);
 /// <param name="radius">図形の半径</param>
 void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float velY, float radius);
 
+/// <summary>
+/// アイテムを作る
+/// </summary>
+/// <param name="item">アイテム</param>
+/// <param name="posX">X軸の位置</param>
+/// <param name="posY">Y軸の位置</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeItem(struct Item* item, float posX, float posY, float velX, float velY, float radius);
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -645,6 +656,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 						MakeEnemy(enemy, 50.0f + i * 50.0f, 400.0f, 0.0f, 0.0f, 20.0f);
 					}
+
+					MakeItem(&item , 350.0f , 500.0f , 0.0f , 0.0f , 20.0f);
 				}
 
 				break;
@@ -673,6 +686,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 				RespawnProcess(&enemy[i].respawn);
 			}
+
+			// アイテム
+			RespawnProcess(&item.respawn);
 
 
 			/*--------------------
@@ -704,6 +720,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
+			// プレイヤー と アイテム
+			if (player.respawn.isRespawn)
+			{
+				if (item.isArrival)
+				{
+					if (powf(player.radius.x + item.radius.x, 2) >=
+						powf(player.pos.world.x - item.pos.world.x, 2) + powf(player.pos.world.y - item.pos.world.y, 2))
+					{
+						// アイテムが消える（復活、出現フラグがfalseになる）
+						item.respawn.isRespawn = false;
+						item.isArrival = false;
+					}
+				}
+			}
+
 
 			/*-------------
 			    座標変換
@@ -717,6 +748,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 				enemy[i].pos.screen = CoordinateTransformation(enemy[i].pos.world);
 			}
+
+			// アイテム
+			item.pos.screen = CoordinateTransformation(item.pos.world);
 
 
 			///
@@ -792,6 +826,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						0.0f , 0xFFFFFFFF , kFillModeSolid
 					);
 				}
+			}
+
+
+			/*   アイテム   */
+
+			// 出現している（出現フラグがtrueである）とき
+			if (item.isArrival)
+			{
+				Novice::DrawEllipse
+				(
+					static_cast<int>(item.pos.screen.x) , static_cast<int>(item.pos.screen.y),
+					static_cast<int>(item.radius.x) , static_cast<int>(item.radius.y) ,
+					0.0f , 0xFFFF00FF , kFillModeSolid
+				);
 			}
 
 
@@ -1071,5 +1119,41 @@ void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float ve
 
 			break;
 		}
+	}
+}
+
+/// <summary>
+/// アイテムを作る
+/// </summary>
+/// <param name="item">アイテム</param>
+/// <param name="posX">X軸の位置</param>
+/// <param name="posY">Y軸の位置</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeItem(struct Item* item, float posX, float posY, float velX, float velY, float radius)
+{
+	// nullを探す
+	if (item == nullptr)
+	{
+		return;
+	}
+
+	if (item->isArrival == false)
+	{
+		// アイテムが出現する（出現フラグがtrueになる）
+		item->isArrival = true;
+
+		// 位置
+		item->pos.world = { posX , posY };
+
+		// 移動速度
+		item->vel = { velX , velY };
+
+		// 加速度
+		item->acceleration = { 1.0f , 1.0f };
+
+		// 図形の半径
+		item->radius = { radius , radius };
 	}
 }
