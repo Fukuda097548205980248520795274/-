@@ -86,6 +86,16 @@ struct Player
 	struct Radius2 radius;
 };
 
+// 光
+struct Light
+{
+	// 位置
+	struct Pos pos;
+
+	// 図形の半径
+	struct Radius2 radius;
+};
+
 // 敵
 struct Enemy
 {
@@ -213,6 +223,13 @@ void MakeEnemy(struct Enemy* enemy, int type , float posX, float posY, float vel
 /// <param name="radius">図形の半径</param>
 void MakeItem(struct Item* item, float posX, float posY, float velX, float velY, float radius);
 
+/// <summary>
+/// 光を照らす操作を行う
+/// </summary>
+/// <param name="light">光</param>
+/// <param name="keys">キー</param>
+void LightIlluminate(struct Light* light, char* keys);
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -308,6 +325,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 図形の半径
 	player.radius = { 0.0f , 0.0f };
+
+
+	/*   光   */
+
+	// 構造体
+	struct Light light;
+
+	// 位置
+	light.pos.world = { player.pos.world.x , player.pos.world.y };
+	light.pos.screen = CoordinateTransformation(player.pos.world);
+
+	// 図形の半径
+	light.radius = { 0.0f , 0.0f };
 
 
 	/*   敵   */
@@ -712,6 +742,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// プレイヤーの操作
 			PlayerMove(&player , keys);
 
+			// 光を照らす操作
+			LightIlluminate(&light, keys);
+
+			// 光をプレイヤーの位置に置く
+			light.pos.world = { player.pos.world.x , player.pos.world.y };
+
 
 			/*---------------
 			    当たり判定
@@ -756,6 +792,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// プレイヤー
 			player.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 光
+			light.pos.screen = CoordinateTransformation(light.pos.world);
 
 			// 敵
 			for (int i = 0; i < kEnemyNum; i++)
@@ -811,19 +850,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 背景
 			Novice::DrawBox(0,0,kWidth,KHeight , 0.0f , 0x000055FF , kFillModeSolid);
 
-			
-			/*   プレイヤー   */
 
-			// 復活している（復活フラグがtrueである）とき
-			if (player.respawn.isRespawn)
-			{
-				Novice::DrawEllipse
-				(
-					static_cast<int>(player.pos.screen.x) , static_cast<int>(player.pos.screen.y),
-					static_cast<int>(player.radius.x) , static_cast<int>(player.radius.y) ,
-					0.0f , 0xFFFFFFFF , kFillModeSolid
-				);
-			}
+			/*   光   */
+
+			Novice::DrawEllipse
+			(
+				static_cast<int>(light.pos.screen.x), static_cast<int>(light.pos.screen.y),
+				static_cast<int>(light.radius.x), static_cast<int>(light.radius.y),
+				0.0f, 0x5555FFFF, kFillModeSolid
+			);
 
 
 			/*   敵   */
@@ -853,6 +888,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					static_cast<int>(item.pos.screen.x) , static_cast<int>(item.pos.screen.y),
 					static_cast<int>(item.radius.x) , static_cast<int>(item.radius.y) ,
 					0.0f , 0xFFFF00FF , kFillModeSolid
+				);
+			}
+
+
+			/*   プレイヤー   */
+
+			// 復活している（復活フラグがtrueである）とき
+			if (player.respawn.isRespawn)
+			{
+				Novice::DrawEllipse
+				(
+					static_cast<int>(player.pos.screen.x), static_cast<int>(player.pos.screen.y),
+					static_cast<int>(player.radius.x), static_cast<int>(player.radius.y),
+					0.0f, 0xFFFFFFFF, kFillModeSolid
 				);
 			}
 
@@ -1173,5 +1222,44 @@ void MakeItem(struct Item* item, float posX, float posY, float velX, float velY,
 
 		// 図形の半径
 		item->radius = { radius , radius };
+	}
+}
+
+/// <summary>
+/// 光を照らす操作を行う
+/// </summary>
+/// <param name="light">光</param>
+/// <param name="keys">キー</param>
+void LightIlluminate(struct Light* light, char* keys)
+{
+	// nullを探す
+	if (light == nullptr || keys == nullptr)
+	{
+		return;
+	}
+
+	// スペースキーで、光を広げる
+	if (keys[DIK_SPACE])
+	{
+		if (light->radius.x < 120.0f || light->radius.y < 120.0f)
+		{
+			light->radius.x += 3.0f;
+			light->radius.y += 3.0f;
+		}
+	}
+	else
+	{
+		// スペースキーを押さないと、光が縮む
+		
+		if (light->radius.x > 0.0f || light->radius.y > 0.0f)
+		{
+			light->radius.x -= 3.0f;
+			light->radius.y -= 3.0f;
+		}
+		else
+		{
+			light->radius.x = 0.0f;
+			light->radius.y = 0.0f;
+		}
 	}
 }
