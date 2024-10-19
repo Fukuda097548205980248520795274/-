@@ -1,4 +1,6 @@
 #include <Novice.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 const char kWindowTitle[] = "LC1C_20_フクダソウワ_ヒカリウム";
 
@@ -583,7 +585,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (gameFrame == 0)
 				{
-					MakeEnemy(enemy , 200.0f , 200.0f , 0.0f , 0.0f , 30.0f);
+					for (int i = 0; i < 8; i++)
+					{
+						MakeEnemy(enemy, 50.0f + i * 50.0f, 400.0f, 0.0f, 0.0f, 20.0f);
+					}
 				}
 
 				break;
@@ -620,6 +625,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// プレイヤーの操作
 			PlayerMove(&player , keys);
+
+
+			/*---------------
+			    当たり判定
+			---------------*/
+
+			// プレイヤー と 敵
+			if (player.respawn.isRespawn)
+			{
+				for (int i = 0; i < kEnemyNum; i++)
+				{
+					if (enemy[i].isArrival)
+					{
+						if (powf(player.radius.x + enemy[i].radius.x, 2) >=
+							powf(player.pos.world.x - enemy[i].pos.world.x, 2) + powf(player.pos.world.y - enemy[i].pos.world.y, 2))
+						{
+							// プレイヤーがやられる（復活フラグがfalseになる）
+							player.respawn.isRespawn = false;
+						}
+					}
+				}
+			}
 
 
 			/*-------------
