@@ -93,6 +93,10 @@ struct Enemy
 	// 出現しているかどうか（出現フラグ）
 	int isArrival;
 
+	// 出現している時間
+	int arrivalTimer;
+
+
 	// 位置
 	struct Pos pos;
 
@@ -119,6 +123,9 @@ const int KHeight = 800;
 
 // 横幅
 const int kWidth = 700;
+
+// 敵の数
+const int kEnemyNum = 128;
 
 
 /*---------------
@@ -242,10 +249,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	player.vel = { 0.0f , 3.0f };
 
 	// 加速度
-	player.acceleration = { 0.0f , 0.0f };
+	player.acceleration = { 1.0f , 0.0f };
 
 	// 図形の半径
 	player.radius = { 0.0f , 0.0f };
+
+
+	/*   敵   */
+
+	// 構造体
+	struct Enemy enemy[kEnemyNum];
+	
+	for (int i = 0; i < kEnemyNum; i++)
+	{
+		// 復活
+		enemy[i].respawn.isRespawn = true;
+		enemy[i].respawn.timer = 120;
+
+		// 出現しているかどうか（出現フラグ）
+		enemy[i].isArrival = false;
+
+		// 出現している時間
+		enemy[i].arrivalTimer = 0;
+
+		// 位置
+		enemy[i].pos.world = { 0.0f , 0.0f };
+		enemy[i].pos.screen = CoordinateTransformation(enemy[i].pos.world);
+
+		// 移動速度
+		enemy[i].vel = { 0.0f , 0.0f };
+
+		// 加速度
+		enemy[i].acceleration = { 1.0f , 1.0f };
+
+		// 図形の半径
+		enemy[i].radius = { 0.0f , 0.0f };
+
+		// 透明度
+		enemy[i].transparency = 0;
+	}
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -827,7 +869,7 @@ void PlayerMove(struct Player* player, char* keys)
 	}
 
 	// プレイヤーを動かす
-	player->pos.world.x += player->vel.x;
+	player->pos.world.x += player->vel.x * player->acceleration.x;
 	player->pos.world.y += player->vel.y * player->acceleration.y;
 
 
