@@ -116,6 +116,33 @@ struct Enemy
 };
 
 
+// アイテム
+struct Item
+{
+	// 復活
+	struct Respawn respawn;
+
+	// 出現しているかどうか（出現フラグ）
+	int isArrival;
+
+	// 出現している時間
+	int arrivalTimer;
+
+
+	// 位置
+	struct Pos pos;
+
+	// 移動速度
+	struct Vel2 vel;
+
+	// 加速度
+	struct Acceleration2 acceleration;
+
+	// 図形の半径
+	struct Radius2 radius;
+};
+
+
 /*----------------
     定数を作る
 ----------------*/
@@ -301,6 +328,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		// 透明度
 		enemy[i].transparency = 0;
 	}
+
+
+	/*   アイテム   */
+
+	// 構造体
+	struct Item item;
+
+	// 復活
+	item.respawn.isRespawn = true;
+	item.respawn.timer = 120;
+
+	// 出現しているかどうか（出現フラグ）
+	item.isArrival = false;
+
+	// 出現している時間
+	item.arrivalTimer = 0;
+
+	// 位置
+	item.pos.world = { 0.0f , 0.0f };
+	item.pos.screen = CoordinateTransformation(item.pos.world);
+
+	// 移動速度
+	item.vel = { 0.0f , 0.0f };
+
+	// 加速度
+	item.acceleration = { 0.0f , 0.0f };
+
+	// 図形の半径
+	item.radius = { 0.0f , 0.0f };
 
 
 	// ウィンドウの×ボタンが押されるまでループ
