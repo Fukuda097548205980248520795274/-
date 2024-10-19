@@ -770,6 +770,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 
+			// 光 と 敵
+			if (player.respawn.isRespawn)
+			{
+				for (int i = 0; i < kEnemyNum ; i++)
+				{
+					if (enemy[i].isArrival)
+					{
+						if (powf(light.radius.x + enemy[i].radius.x, 2) >=
+							powf(light.pos.world.x - enemy[i].pos.world.x, 2) + powf(light.pos.world.y - enemy[i].pos.world.y, 2))
+						{
+							if (enemy[i].transparency < 255)
+							{
+								enemy[i].transparency++;
+							}
+						}
+						else
+						{
+							if (enemy[i].transparency > 0)
+							{
+								enemy[i].transparency -= 2;
+							}
+							
+							if(enemy[i].transparency < 0)
+							{
+								enemy[i].transparency = 0;
+							}
+						}
+					}
+				}
+			}
+
 			// プレイヤー と アイテム
 			if (player.respawn.isRespawn)
 			{
@@ -872,7 +903,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					(
 						static_cast<int>(enemy[i].pos.screen.x) , static_cast<int>(enemy[i].pos.screen.y),
 						static_cast<int>(enemy[i].radius.x) , static_cast<int>(enemy[i].radius.y),
-						0.0f , 0xFFFFFFFF , kFillModeSolid
+						0.0f , 0xFFFFFF00 + enemy[i].transparency, kFillModeSolid
 					);
 				}
 			}
