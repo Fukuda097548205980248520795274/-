@@ -1253,8 +1253,8 @@ void LightIlluminate(struct Light* light, char* keys)
 		
 		if (light->radius.x > 0.0f || light->radius.y > 0.0f)
 		{
-			light->radius.x -= 3.0f;
-			light->radius.y -= 3.0f;
+			light->radius.x -= 6.0f;
+			light->radius.y -= 6.0f;
 		}
 		else
 		{
