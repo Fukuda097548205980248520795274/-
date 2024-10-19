@@ -98,6 +98,9 @@ struct Enemy
 	// 出現している時間
 	int arrivalTimer;
 
+	// 種類
+	int type;
+
 
 	// 位置
 	struct Pos pos;
@@ -191,12 +194,13 @@ void PlayerMove(struct Player* player , char* keys);
 /// 敵を作る
 /// </summary>
 /// <param name="enemy">敵</param>
+/// <param name="type">種類</param>
 /// <param name="posX">X軸の位置</param>
 /// <param name="posY">Y軸の位置</param>
 /// <param name="velX">X軸の移動速度</param>
 /// <param name="velY">Y軸の移動速度</param>
 /// <param name="radius">図形の半径</param>
-void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float velY, float radius);
+void MakeEnemy(struct Enemy* enemy, int type , float posX, float posY, float velX, float velY, float radius);
 
 /// <summary>
 /// アイテムを作る
@@ -310,6 +314,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 構造体
 	struct Enemy enemy[kEnemyNum];
+
+	// 敵の種類
+	enum ENEMY_TYPE
+	{
+		ENEMY_TYPE_STONE,
+		ENEMY_TYPE_DENGER
+	};
 	
 	for (int i = 0; i < kEnemyNum; i++)
 	{
@@ -322,6 +333,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		// 出現している時間
 		enemy[i].arrivalTimer = 0;
+
+		// 敵の種類
+		enemy[i].type = -1;
 
 		// 位置
 		enemy[i].pos.world = { 0.0f , 0.0f };
@@ -654,7 +668,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				{
 					for (int i = 0; i < 8; i++)
 					{
-						MakeEnemy(enemy, 50.0f + i * 50.0f, 400.0f, 0.0f, 0.0f, 20.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_STONE , 50.0f + i * 50.0f, 400.0f, 0.0f, 0.0f, 20.0f);
 					}
 
 					MakeItem(&item , 350.0f , 500.0f , 0.0f , 0.0f , 20.0f);
@@ -1085,12 +1099,13 @@ void PlayerMove(struct Player* player, char* keys)
 /// 敵を作る
 /// </summary>
 /// <param name="enemy">敵</param>
+/// <param name="type">種類</param>
 /// <param name="posX">X軸の位置</param>
 /// <param name="posY">Y軸の位置</param>
 /// <param name="velX">X軸の移動速度</param>
 /// <param name="velY">Y軸の移動速度</param>
 /// <param name="radius">図形の半径</param>
-void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float velY, float radius)
+void MakeEnemy(struct Enemy* enemy, int type, float posX, float posY, float velX, float velY, float radius)
 {
 	// nullを探す
 	if (enemy == nullptr)
@@ -1104,6 +1119,9 @@ void MakeEnemy(struct Enemy* enemy, float posX, float posY, float velX, float ve
 		{
 			// 敵を出現させる（出現フラグがtrueになる）
 			enemy[i].isArrival = true;
+
+			// 敵の種類
+			enemy[i].type = type;
 
 			// 位置
 			enemy[i].pos.world = { posX , posY };
