@@ -161,7 +161,7 @@ struct Item
 ----------------*/
 
 // 縦幅
-const int KHeight = 800;
+const int kHeight = 800;
 
 // 横幅
 const int kWidth = 700;
@@ -235,7 +235,7 @@ void LightIlluminate(struct Light* light, char* keys);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, kWidth, KHeight);
+	Novice::Initialize(kWindowTitle, kWidth, kHeight);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
@@ -766,7 +766,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					case ENEMY_TYPE_DENGER:
 
-						enemy[i].radius.x = static_cast<float>(KHeight / 2);
+						enemy[i].radius.x = static_cast<float>(kWidth / 2);
 						enemy[i].radius.y += 0.5f;
 
 						break;
@@ -865,7 +865,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						item.isArrival = false;
 
 						// 危険な何かが出現する
-						MakeEnemy(enemy, ENEMY_TYPE_DENGER, static_cast<float>(kWidth / 2), static_cast<float>(KHeight), 0.0f, 0.0f, 0.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_DENGER, static_cast<float>(kWidth / 2), static_cast<float>(kHeight), 0.0f, 0.0f, 0.0f);
 					}
 				}
 			}
@@ -933,7 +933,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			------------------------*/
 
 			// 背景
-			Novice::DrawBox(0,0,kWidth,KHeight , 0.0f , 0x000055FF , kFillModeSolid);
+			Novice::DrawBox(0,0,kWidth,kHeight , 0.0f , 0x000055FF , kFillModeSolid);
 
 
 			/*   光   */
@@ -1051,7 +1051,7 @@ struct Coordinate2 CoordinateTransformation(struct Coordinate2 world)
 	struct Coordinate2 screen;
 
 	screen.x = world.x;
-	screen.y = -world.y + static_cast<float>(KHeight) - 100.0f;
+	screen.y = -world.y + static_cast<float>(kHeight) - 100.0f;
 
 	return screen;
 }
@@ -1206,7 +1206,7 @@ void PlayerMove(struct Player* player, char* keys)
 	{
 		if (player->flug.isFlying)
 		{
-			if (player->pos.world.x + player->radius.x < static_cast<float>(KHeight))
+			if (player->pos.world.x + player->radius.x < static_cast<float>(kHeight))
 			{
 				player->vel.x = 4.0f;
 			}
@@ -1245,9 +1245,9 @@ void PlayerMove(struct Player* player, char* keys)
 		player->pos.world.y = player->radius.y;
 	}
 
-	if (player->pos.world.y + player->radius.y > static_cast<float>(KHeight) - 100.0f)
+	if (player->pos.world.y + player->radius.y > static_cast<float>(kHeight) - 100.0f)
 	{
-		player->pos.world.y = static_cast<float>(KHeight) - 100.0f - player->radius.y;
+		player->pos.world.y = static_cast<float>(kHeight) - 100.0f - player->radius.y;
 	}
 }
 
