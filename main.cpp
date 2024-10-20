@@ -749,6 +749,36 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			light.pos.world = { player.pos.world.x , player.pos.world.y };
 
 
+			/*-------------
+			    敵の動き
+			-------------*/
+
+			// 出現している（出現フラグがtrueである）敵を動かす
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				if (enemy[i].isArrival)
+				{
+					switch (enemy[i].type)
+					{
+					case ENEMY_TYPE_STONE:
+
+						break;
+
+					case ENEMY_TYPE_DENGER:
+
+						enemy[i].radius.x = static_cast<float>(KHeight / 2);
+						enemy[i].radius.y += 0.5f;
+
+						break;
+					}
+
+					// 敵を動かす
+					enemy[i].pos.world.x += enemy[i].vel.x * enemy[i].acceleration.x;
+					enemy[i].pos.world.y += enemy[i].vel.y * enemy[i].acceleration.y;
+				}
+			}
+
+
 			/*---------------
 			    当たり判定
 			---------------*/
@@ -760,11 +790,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				{
 					if (enemy[i].isArrival)
 					{
-						if (powf(player.radius.x + enemy[i].radius.x, 2) >=
-							powf(player.pos.world.x - enemy[i].pos.world.x, 2) + powf(player.pos.world.y - enemy[i].pos.world.y, 2))
+						// 危険な何か以外の敵
+						if (enemy[i].type != ENEMY_TYPE_DENGER)
 						{
-							// プレイヤーがやられる（復活フラグがfalseになる）
-							player.respawn.isRespawn = false;
+							if (powf(player.radius.x + enemy[i].radius.x, 2) >=
+								powf(player.pos.world.x - enemy[i].pos.world.x, 2) + powf(player.pos.world.y - enemy[i].pos.world.y, 2))
+							{
+								// プレイヤーがやられる（復活フラグがfalseになる）
+								player.respawn.isRespawn = false;
+							}
+						}
+						else
+						{
+							// 危険な何かの敵
+
+							if (player.pos.world.x - player.radius.x < enemy[i].pos.world.x + enemy[i].radius.x &&
+								player.pos.world.x + player.radius.x > enemy[i].pos.world.x - enemy[i].radius.x)
+							{
+								if (player.pos.world.y - player.radius.y < enemy[i].pos.world.y + enemy[i].radius.y &&
+									player.pos.world.y + player.radius.y > enemy[i].pos.world.y - enemy[i].radius.y)
+								{
+									// プレイヤーがやられる（復活フラグがfalseになる）
+									player.respawn.isRespawn = false;
+								}
+							}
 						}
 					}
 				}
@@ -780,6 +829,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						if (powf(light.radius.x + enemy[i].radius.x, 2) >=
 							powf(light.pos.world.x - enemy[i].pos.world.x, 2) + powf(light.pos.world.y - enemy[i].pos.world.y, 2))
 						{
+							// 敵がみえるようになる
 							if (enemy[i].transparency < 255)
 							{
 								enemy[i].transparency++;
@@ -787,6 +837,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 						else
 						{
+							// 敵がみえなくなっていく
 							if (enemy[i].transparency > 0)
 							{
 								enemy[i].transparency -= 2;
@@ -812,6 +863,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						// アイテムが消える（復活、出現フラグがfalseになる）
 						item.respawn.isRespawn = false;
 						item.isArrival = false;
+
+						// 危険な何かが出現する
+						MakeEnemy(enemy, ENEMY_TYPE_DENGER, static_cast<float>(kWidth / 2), static_cast<float>(KHeight), 0.0f, 0.0f, 0.0f);
 					}
 				}
 			}
@@ -884,12 +938,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			/*   光   */
 
-			Novice::DrawEllipse
-			(
-				static_cast<int>(light.pos.screen.x), static_cast<int>(light.pos.screen.y),
-				static_cast<int>(light.radius.x), static_cast<int>(light.radius.y),
-				0.0f, 0x5555FFFF, kFillModeSolid
-			);
+			// 復活している（復活フラグがtrueである）とき
+			if (player.respawn.isRespawn)
+			{
+				Novice::DrawEllipse
+				(
+					static_cast<int>(light.pos.screen.x), static_cast<int>(light.pos.screen.y),
+					static_cast<int>(light.radius.x), static_cast<int>(light.radius.y),
+					0.0f, 0x5555FFFF, kFillModeSolid
+				);
+			}
 
 
 			/*   敵   */
@@ -899,12 +957,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 				if (enemy[i].isArrival)
 				{
-					Novice::DrawEllipse
-					(
-						static_cast<int>(enemy[i].pos.screen.x) , static_cast<int>(enemy[i].pos.screen.y),
-						static_cast<int>(enemy[i].radius.x) , static_cast<int>(enemy[i].radius.y),
-						0.0f , 0xFFFFFF00 + enemy[i].transparency, kFillModeSolid
-					);
+					switch (enemy[i].type)
+					{
+					case ENEMY_TYPE_STONE:
+
+						Novice::DrawEllipse
+						(
+							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
+							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
+							0.0f, 0xFFFFFF00 + enemy[i].transparency, kFillModeSolid
+						);
+
+						break;
+
+					case ENEMY_TYPE_DENGER:
+
+						Novice::DrawBox
+						(
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x) , static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].radius.x) * 2 , static_cast<int>(enemy[i].radius.y) * 2,
+							0.0f , 0xFF0000FF , kFillModeSolid
+						);
+
+						break;
+					}
 				}
 			}
 
