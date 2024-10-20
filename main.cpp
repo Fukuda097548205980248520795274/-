@@ -255,7 +255,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	enum SCREEN_TYPE
 	{
 		SCREEN_TYPE_START,
-		SCREEN_TYPE_GAME
+		SCREEN_TYPE_GAME,
+		SCREEN_TYPE_END
 	};
 
 	// 現在の画面
@@ -300,6 +301,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ゲームが動いているかどうか（ゲームフラグ）
 	int isGameOperation = false;
+
+	// クリアしたかどうか（クリアフラグ）
+	int isClear = false;
 
 
 
@@ -439,6 +443,118 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///
 			/// ↓ スタート画面ここから
 			/// 
+
+			/*--------------------
+			    ゲームを初期化
+			--------------------*/
+
+			/*   ゲーム   */
+
+			// 現在のステージ
+			stageNo = -1;
+
+			// クリアしたかどうか（クリアフラグ）
+			isClear = false;
+
+
+			/*   プレイヤー   */
+
+			// 復活
+			player.respawn.isRespawn = false;
+			player.respawn.timer = 120;
+
+			// フラグ
+			player.flug.isFlying = false;
+			player.flug.isRunAway = false;
+
+			// 位置
+			player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
+			player.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 移動速度
+			player.vel = { 0.0f , 3.0f };
+
+			// 加速度
+			player.acceleration = { 1.0f , 0.0f };
+
+			// 図形の半径
+			player.radius = { 0.0f , 0.0f };
+
+
+			/*   光   */
+
+			// 位置
+			light.pos.world = { player.pos.world.x , player.pos.world.y };
+			light.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 図形の半径
+			light.radius = { 0.0f , 0.0f };
+
+
+			/*   敵   */
+
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				// 復活
+				enemy[i].respawn.isRespawn = true;
+				enemy[i].respawn.timer = 120;
+
+				// 出現しているかどうか（出現フラグ）
+				enemy[i].isArrival = false;
+
+				// 出現している時間
+				enemy[i].arrivalTimer = 0;
+
+				// 敵の種類
+				enemy[i].type = -1;
+
+				// 位置
+				enemy[i].pos.world = { 0.0f , 0.0f };
+				enemy[i].pos.screen = CoordinateTransformation(enemy[i].pos.world);
+
+				// 移動速度
+				enemy[i].vel = { 0.0f , 0.0f };
+
+				// 加速度
+				enemy[i].acceleration = { 1.0f , 1.0f };
+
+				// 図形の半径
+				enemy[i].radius = { 0.0f , 0.0f };
+
+				// 透明度
+				enemy[i].transparency = 0;
+			}
+
+
+			/*   アイテム   */
+
+			// 復活
+			item.respawn.isRespawn = true;
+			item.respawn.timer = 120;
+
+			// 出現しているかどうか（出現フラグ）
+			item.isArrival = false;
+
+			// 出現している時間
+			item.arrivalTimer = 0;
+
+			// 位置
+			item.pos.world = { 0.0f , 0.0f };
+			item.pos.screen = CoordinateTransformation(item.pos.world);
+
+			// 移動速度
+			item.vel = { 0.0f , 0.0f };
+
+			// 加速度
+			item.acceleration = { 0.0f , 0.0f };
+
+			// 図形の半径
+			item.radius = { 0.0f , 0.0f };
+
+
+			/*----------------------
+			    スタート画面の操作
+			----------------------*/
 
 			// ゲームが動いている（ゲームフラグがtrueである）ときに、ゲームフレームを動かす
 			if (isGameOperation)
@@ -691,7 +807,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// 
 
 			/*-----------------------
-			    ステージを設定する1
+			    ステージを設定する
 			-----------------------*/
 
 			switch (stageNo)
@@ -733,15 +849,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// プレイヤーが復活処理を進めたら、ゲームが終了する
 			if (player.respawn.timer <= 5)
 			{
-				screenNo = SCREEN_TYPE_START;
+				screenNo = SCREEN_TYPE_END;
 			}
 
-			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了する
+			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了（クリア）する
 			if (player.flug.isRunAway)
 			{
 				if (player.pos.world.y - player.radius.y <= 0.0f)
 				{
-					screenNo = SCREEN_TYPE_START;
+					screenNo = SCREEN_TYPE_END;
+
+					// ゲームクリアになる（クリアフラグがtrueになる）
+					isClear = true;
+
+					// ゲームフレームを初期化する
+					gameFrame = 0;
 				}
 			}
 
@@ -927,6 +1049,167 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// 
 
 			break;
+
+		case SCREEN_TYPE_END:
+
+			///
+			/// ↓ ゲーム終了画面ここから
+			/// 
+
+			/*-----------------------
+			    ゲームを初期化する
+			-----------------------*/
+
+			/*   プレイヤー   */
+
+			// 復活
+			player.respawn.isRespawn = false;
+			player.respawn.timer = 120;
+
+			// フラグ
+			player.flug.isFlying = false;
+			player.flug.isRunAway = false;
+
+			// 位置
+			player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
+			player.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 移動速度
+			player.vel = { 0.0f , 3.0f };
+
+			// 加速度
+			player.acceleration = { 1.0f , 0.0f };
+
+			// 図形の半径
+			player.radius = { 0.0f , 0.0f };
+
+
+			/*   光   */
+
+			// 位置
+			light.pos.world = { player.pos.world.x , player.pos.world.y };
+			light.pos.screen = CoordinateTransformation(player.pos.world);
+
+			// 図形の半径
+			light.radius = { 0.0f , 0.0f };
+
+
+			/*   敵   */
+
+			for (int i = 0; i < kEnemyNum; i++)
+			{
+				// 復活
+				enemy[i].respawn.isRespawn = true;
+				enemy[i].respawn.timer = 120;
+
+				// 出現しているかどうか（出現フラグ）
+				enemy[i].isArrival = false;
+
+				// 出現している時間
+				enemy[i].arrivalTimer = 0;
+
+				// 敵の種類
+				enemy[i].type = -1;
+
+				// 位置
+				enemy[i].pos.world = { 0.0f , 0.0f };
+				enemy[i].pos.screen = CoordinateTransformation(enemy[i].pos.world);
+
+				// 移動速度
+				enemy[i].vel = { 0.0f , 0.0f };
+
+				// 加速度
+				enemy[i].acceleration = { 1.0f , 1.0f };
+
+				// 図形の半径
+				enemy[i].radius = { 0.0f , 0.0f };
+
+				// 透明度
+				enemy[i].transparency = 0;
+			}
+
+
+			/*   アイテム   */
+
+			// 復活
+			item.respawn.isRespawn = true;
+			item.respawn.timer = 120;
+
+			// 出現しているかどうか（出現フラグ）
+			item.isArrival = false;
+
+			// 出現している時間
+			item.arrivalTimer = 0;
+
+			// 位置
+			item.pos.world = { 0.0f , 0.0f };
+			item.pos.screen = CoordinateTransformation(item.pos.world);
+
+			// 移動速度
+			item.vel = { 0.0f , 0.0f };
+
+			// 加速度
+			item.acceleration = { 0.0f , 0.0f };
+
+			// 図形の半径
+			item.radius = { 0.0f , 0.0f };
+
+
+
+			/*-------------------------
+			     ゲーム終了画面の操作
+			-------------------------*/
+
+			switch (stageNo)
+			{
+			case STAGE_TYPE_1:
+
+				// クリアしたかどうか
+				if (isClear)
+				{
+					
+				}
+				else
+				{
+
+				}
+
+				break;
+
+			case STAGE_TYPE_2:
+
+				// クリアしたかどうか
+				if (isClear)
+				{
+
+				}
+				else
+				{
+
+				}
+
+				break;
+
+			case STAGE_TYPE_3:
+
+				// クリアしたかどうか
+				if (isClear)
+				{
+
+				} 
+				else
+				{
+
+				}
+
+				break;
+			}
+
+			///
+			/// ↑ ゲーム終了画面ここまで
+			/// 
+
+			break;
 		}
 
 
@@ -1046,6 +1329,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			///
 			/// ↑ ゲーム画面ここまで
+			/// 
+
+			break;
+
+		case SCREEN_TYPE_END:
+
+			///
+			/// ↓ ゲーム終了画面ここから
+			/// 
+
+			///
+			/// ↑ ゲーム終了画面ここまで
 			/// 
 
 			break;
