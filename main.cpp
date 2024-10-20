@@ -52,6 +52,9 @@ struct Flug
 {
 	// 飛んでいるかどうか（飛行フラグ）
 	int isFlying;
+
+	// 逃げているかどうか（逃げるフラグ）
+	int isRunAway;
 };
 
 // 復活
@@ -312,6 +315,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// フラグ
 	player.flug.isFlying = false;
+	player.flug.isRunAway = false;
 
 	// 位置
 	player.pos.world = { static_cast<int>(kWidth / 2) , 0.0f };
@@ -715,7 +719,31 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				break;
 			}
 
-			gameFrame++;
+			// ゲームフレームを5フレームまで進める
+			if (gameFrame < 5)
+			{
+				gameFrame++;
+			}
+
+
+			/*--------------------
+			    ゲームの終了条件
+			--------------------*/
+
+			// プレイヤーが復活処理を進めたら、ゲームが終了する
+			if (player.respawn.timer <= 5)
+			{
+				screenNo = SCREEN_TYPE_START;
+			}
+
+			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了する
+			if (player.flug.isRunAway)
+			{
+				if (player.pos.world.y - player.radius.y <= 0.0f)
+				{
+					screenNo = SCREEN_TYPE_START;
+				}
+			}
 
 
 			/*--------------
@@ -866,6 +894,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						// 危険な何かが出現する
 						MakeEnemy(enemy, ENEMY_TYPE_DENGER, static_cast<float>(kWidth / 2), static_cast<float>(kHeight), 0.0f, 0.0f, 0.0f);
+
+						// プレイヤーが逃げ始める（逃げるフラグがtrueになる）
+						player.flug.isRunAway = true;
 					}
 				}
 			}
