@@ -562,6 +562,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				gameFrame++;
 			}
 
+
+			// ゲームが動いている（ゲームフラグがtrueである）ときは、操作ができない
+
 			// スタート画面切り替え
 			switch (startNo)
 			{
@@ -1160,6 +1163,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			     ゲーム終了画面の操作
 			-------------------------*/
 
+			// ゲームが動いている（ゲームフラグがtrueである）ときに、ゲームフレームを動かす
+			if (isGameOperation)
+			{
+				gameFrame++;
+			}
+
+
+			// ゲームが動いている（ゲームフラグがtrueである）ときは、操作ができない
+
 			switch (stageNo)
 			{
 			case STAGE_TYPE_1:
@@ -1167,11 +1179,68 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				// クリアしたかどうか
 				if (isClear)
 				{
-					
+					// スペースキーを押すと、次のステージに進む
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						if (isGameOperation == false)
+						{
+							// ゲームを動かす（ゲームフラグをtrueにする）
+							isGameOperation = true;
+						}
+					}
+
+					if (isGameOperation)
+					{
+						if (gameFrame >= 70)
+						{
+							// ステージ2に進む
+							stageNo = STAGE_TYPE_2;
+
+							// ゲーム画面に戻る
+							screenNo = SCREEN_TYPE_GAME;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
+
+							
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+
+							// ゲームが止まる（ゲームフラグをfalseに変える）
+							isGameOperation = false;
+
+							// クリアを取り消す（クリアフラグをfalseに変える）
+							isClear = false;
+						}
+					}
 				}
 				else
 				{
+					// スペースキーを押すと、スタート画面に戻る
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						if (isGameOperation == false)
+						{
+							// ゲームを動かす（ゲームフラグをtrueにする）
+							isGameOperation = true;
+						}
+					}
 
+					if (isGameOperation)
+					{
+						if (gameFrame >= 70)
+						{
+							// スタート画面に戻る
+							screenNo = SCREEN_TYPE_START;
+
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+
+							// ゲームが止まる（ゲームフラグをfalseに変える）
+							isGameOperation = false;
+						}
+					}
 				}
 
 				break;
@@ -1181,25 +1250,98 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				// クリアしたかどうか
 				if (isClear)
 				{
+					// スペースキーを押すと、次のステージに進む
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						if (isGameOperation == false)
+						{
+							// ゲームを動かす（ゲームフラグをtrueにする）
+							isGameOperation = true;
+						}
+					}
 
+					if (isGameOperation)
+					{
+						if (gameFrame >= 70)
+						{
+							// ステージ3に進む
+							stageNo = STAGE_TYPE_3;
+
+							// ゲーム画面に戻る
+							screenNo = SCREEN_TYPE_GAME;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
+
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+
+							// ゲームが止まる（ゲームフラグをfalseに変える）
+							isGameOperation = false;
+
+							// クリアを取り消す（クリアフラグをfalseに変える）
+							isClear = false;
+						}
+					}
 				}
 				else
 				{
+					// スペースキーを押すと、スタート画面に戻る
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						if (isGameOperation == false)
+						{
+							// ゲームを動かす（ゲームフラグをtrueにする）
+							isGameOperation = true;
+						}
+					}
 
+					if (isGameOperation)
+					{
+						if (gameFrame >= 70)
+						{
+							// スタート画面に戻る
+							screenNo = SCREEN_TYPE_START;
+
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+
+							// ゲームが止まる（ゲームフラグをfalseに変える）
+							isGameOperation = false;
+						}
+					}
 				}
 
 				break;
 
 			case STAGE_TYPE_3:
 
-				// クリアしたかどうか
-				if (isClear)
+				// スペースキーを押すと、スタート画面に戻る
+				if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
 				{
+					if (isGameOperation == false)
+					{
+						// ゲームを動かす（ゲームフラグをtrueにする）
+						isGameOperation = true;
+					}
+				}
 
-				} 
-				else
+				if (isGameOperation)
 				{
+					if (gameFrame >= 70)
+					{
+						// スタート画面に戻る
+						screenNo = SCREEN_TYPE_START;
 
+
+						// ゲームフレームを初期化する
+						gameFrame = 0;
+
+						// ゲームが止まる（ゲームフラグをfalseに変える）
+						isGameOperation = false;
+					}
 				}
 
 				break;
