@@ -170,7 +170,7 @@ const int kHeight = 800;
 const int kWidth = 700;
 
 // 敵の数
-const int kEnemyNum = 128;
+const int kEnemyNum = 256;
 
 
 /*---------------
@@ -326,7 +326,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	player.pos.screen = CoordinateTransformation(player.pos.world);
 
 	// 移動速度
-	player.vel = { 0.0f , 3.0f };
+	player.vel = { 0.0f , 1.5f };
 
 	// 加速度
 	player.acceleration = { 1.0f , 0.0f };
@@ -472,7 +472,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			player.pos.screen = CoordinateTransformation(player.pos.world);
 
 			// 移動速度
-			player.vel = { 0.0f , 3.0f };
+			player.vel = { 0.0f , 1.5f };
 
 			// 加速度
 			player.acceleration = { 1.0f , 0.0f };
@@ -819,12 +819,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (gameFrame == 0)
 				{
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 13; i++)
 					{
-						MakeEnemy(enemy, ENEMY_TYPE_STONE , 50.0f + i * 50.0f, 400.0f, 0.0f, 0.0f, 20.0f);
+						MakeEnemy(enemy,ENEMY_TYPE_STONE , 50.0f, 50.0f + i * 50.0f, 0.0f, 0.0f, 10.0f);
+
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth) - 50.0f, 50.0f + i * 50.0f, 0.0f, 0.0f, 10.0f);
 					}
 
-					MakeItem(&item , 350.0f , 500.0f , 0.0f , 0.0f , 20.0f);
+					for (int i = 0; i < 8; i++)
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth) - 100.0f - 50.0f * i, 250.0f, 0.0f, 0.0f, 10.0f);
+					}
+
+					MakeItem(&item , 350.0f , 500.0f , 0.0f , 0.0f , 10.0f);
 				}
 
 				break;
@@ -985,7 +992,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							// 敵がみえるようになる
 							if (enemy[i].transparency < 255)
 							{
-								enemy[i].transparency++;
+								enemy[i].transparency += 3;
+							}
+							
+							if(enemy[i].transparency >= 255)
+							{
+								enemy[i].transparency = 255;
 							}
 						}
 						else
@@ -993,7 +1005,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							// 敵がみえなくなっていく
 							if (enemy[i].transparency > 0)
 							{
-								enemy[i].transparency -= 2;
+								enemy[i].transparency -= 3;
 							}
 							
 							if(enemy[i].transparency < 0)
@@ -1078,7 +1090,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			player.pos.screen = CoordinateTransformation(player.pos.world);
 
 			// 移動速度
-			player.vel = { 0.0f , 3.0f };
+			player.vel = { 0.0f , 1.5f };
 
 			// 加速度
 			player.acceleration = { 1.0f , 0.0f };
@@ -1572,7 +1584,7 @@ void PlayerInitialState(struct Player* player)
 	player->pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
 
 	// 図形の半径
-	player->radius = { 10.0f , 10.0f };
+	player->radius = { 5.0f , 5.0f };
 }
 
 /// <summary>
@@ -1612,14 +1624,14 @@ void PlayerMove(struct Player* player, char* keys)
 
 
 		// 風船が膨らむ
-		if (player->radius.x < 40.0f)
+		if (player->radius.x < 20.0f)
 		{
-			player->radius.x += 1.0f;
+			player->radius.x += 0.5f;
 		}
 
-		if (player->radius.y < 40.0f)
+		if (player->radius.y < 20.0f)
 		{
-			player->radius.y += 1.0f;
+			player->radius.y += 0.5f;
 		}
 	}
 	else
@@ -1632,22 +1644,22 @@ void PlayerMove(struct Player* player, char* keys)
 
 
 		// 風船が縮む
-		if (player->radius.x > 10.0f)
+		if (player->radius.x > 5.0f)
 		{
 			player->radius.x += -1.0f;
 		}
 		else
 		{
-			player->radius.x = 10.0f;
+			player->radius.x = 5.0f;
 		}
 
-		if (player->radius.y > 10.0f)
+		if (player->radius.y > 5.0f)
 		{
 			player->radius.y += -1.0f;
 		}
 		else
 		{
-			player->radius.y = 10.0f;
+			player->radius.y = 5.0f;
 		}
 	}
 
@@ -1664,7 +1676,7 @@ void PlayerMove(struct Player* player, char* keys)
 		{
 			if (player->pos.world.x - player->radius.x > 0.0f)
 			{
-				player->vel.x = -4.0f;
+				player->vel.x = -2.0f;
 			}
 		}
 	}
@@ -1676,7 +1688,7 @@ void PlayerMove(struct Player* player, char* keys)
 		{
 			if (player->pos.world.x + player->radius.x < static_cast<float>(kHeight))
 			{
-				player->vel.x = 4.0f;
+				player->vel.x = 2.0f;
 			}
 		}
 	}
@@ -1816,10 +1828,10 @@ void LightIlluminate(struct Light* light, char* keys)
 	// スペースキーで、光を広げる
 	if (keys[DIK_SPACE])
 	{
-		if (light->radius.x < 120.0f || light->radius.y < 120.0f)
+		if (light->radius.x < 80.0f || light->radius.y < 80.0f)
 		{
-			light->radius.x += 3.0f;
-			light->radius.y += 3.0f;
+			light->radius.x += 1.5f;
+			light->radius.y += 1.5f;
 		}
 	}
 	else
@@ -1828,8 +1840,8 @@ void LightIlluminate(struct Light* light, char* keys)
 		
 		if (light->radius.x > 0.0f || light->radius.y > 0.0f)
 		{
-			light->radius.x -= 6.0f;
-			light->radius.y -= 6.0f;
+			light->radius.x -= 3.0f;
+			light->radius.y -= 3.0f;
 		}
 		else
 		{
