@@ -298,6 +298,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// 現在のステージ
 	int stageNo = -1;
 
+	// ステージフレーム
+	int stageFrame = 0;
+
 
 	// ゲームフレーム
 	int gameFrame = 0;
@@ -448,6 +451,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/*   テキスト   */
 
 	// ゲーム
+	int ghTextGetKey = Novice::LoadTexture("./Resources/texts/game/getKey.png");
 	int ghTextRunAway = Novice::LoadTexture("./Resources/texts/game/runAway.png");
 
 	// ステージ
@@ -487,6 +491,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 現在のステージ
 			stageNo = -1;
+
+			// ステージフレーム
+			stageFrame = 0;
 
 			// クリアしたかどうか（クリアフラグ）
 			isClear = false;
@@ -855,7 +862,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 			case STAGE_TYPE_1:
 
-				if (gameFrame == 0)
+				if (stageFrame == 0)
 				{
 					for (int i = 0; i < 26; i++)
 					{
@@ -885,18 +892,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			case STAGE_TYPE_2:
 
-				for (int i = 0; i < 8; i++)
+				if (stageFrame == 0)
 				{
-					if (i == 2)
+					for (int i = 0; i < 8; i++)
 					{
-						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
-					}
-					else
-					{
-						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f , 0.0f, 0.0f, 10.0f);
-					}
+						if (i == 2)
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+						} else
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+						}
 
-					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+					}
 				}
 
 				break;
@@ -906,16 +915,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				break;
 			}
 
-			// ゲームフレームを5フレームまで進める
-			if (gameFrame < 5)
+			// ステージフレームを100フレームまで進める
+			if (stageFrame < 100)
 			{
-				gameFrame++;
+				stageFrame++;
 			}
 
-			// 逃げている（逃げるフラグがtrueである）ときに、ゲームフレームを動かす
+			// 逃げている（逃げるフラグがtrueである）ときに、ステージフレームを動かす
 			if (player.flug.isRunAway)
 			{
-				gameFrame++;
+				stageFrame++;
 			}
 
 
@@ -1151,6 +1160,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						// プレイヤーが逃げ始める（逃げるフラグがtrueになる）
 						player.flug.isRunAway = true;
+
+						// ステージフレームを100まで進める
+						stageFrame = 100;
 					}
 				}
 			}
@@ -1191,6 +1203,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*-----------------------
 			    ゲームを初期化する
 			-----------------------*/
+
+			/*   ゲーム   */
+
+			// ステージフレーム
+			stageFrame = 0;
+
 
 			/*   プレイヤー   */
 
@@ -1559,7 +1577,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			    図形や画像を描画する
 			------------------------*/
 
-			// 背景
+
+			/*   背景   */
+
+			Novice::DrawBox(0, 0, 1000, 800, 0.0f, 0x000000FF, kFillModeSolid);
+			
+			// 逃げているときとで、変化させる
 			if (player.flug.isRunAway == false)
 			{
 				Novice::DrawSprite(0, 0, ghBg, 1, 1, 0.0f, 0xFFFFFFFF);
@@ -1680,9 +1703,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			/*   テキスト   */
 
+			if (stageFrame < 80)
+			{
+				Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextGetKey, 2, 2, 0.0f, 0xFFFFFFFF);
+			}
+
+			// プレイヤーが逃げて（逃げフラグになって）100フレームに表示する
 			if (player.flug.isRunAway)
 			{
-				if (gameFrame < 100)
+				if (stageFrame < 200)
 				{
 					Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextRunAway, 2, 2, 0.0f, 0xFFFFFFFF);
 				}
