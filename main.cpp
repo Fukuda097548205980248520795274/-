@@ -365,7 +365,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ENEMY_TYPE_STONE,
 		ENEMY_TYPE_DENGER,
 		ENEMY_TYPE_SOLAR_PANEL_1,
-		ENEMY_TYPE_SOLAR_STONE_1
+		ENEMY_TYPE_SOLAR_STONE_1,
+		ENEMY_TYPE_SOLAR_PANEL_2,
+		ENEMY_TYPE_SOLAR_STONE_2
 	};
 	
 	for (int i = 0; i < kEnemyNum; i++)
@@ -898,19 +900,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 						if (i == 2)
 						{
-							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
-						} else
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+						} 
+						else
 						{
-							MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+							MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
 						}
 
 						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 					}
+
+					for (int i = 0; i < 8; i++)
+					{
+						for (int j = 0; j < 9; j++)
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_2, 475.0f + 25 * j, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+						}
+					}
+
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
 
 				break;
 
 			case STAGE_TYPE_3:
+
+				if (stageFrame == 0)
+				{
+					for (int i = 0; i < 8; i++)
+					{
+
+						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+					}
+				}
 
 				break;
 			}
@@ -1130,6 +1152,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 									}
 								}
 
+								break;
+
+							case ENEMY_TYPE_SOLAR_PANEL_2:
+
+								enemy[i].energy++;
+
+								// エネルギーが最大になったら、スイッチと連動している石が消える（復活、出現フラグがfalseになる）
+								if (enemy[i].energy >= 150)
+								{
+									enemy[i].respawn.isRespawn = false;
+									enemy[i].isArrival = false;
+
+									for (int j = 0; j < kEnemyNum; j++)
+									{
+										if (enemy[j].isArrival)
+										{
+											if (enemy[j].type == ENEMY_TYPE_SOLAR_STONE_2)
+											{
+												enemy[j].respawn.isRespawn = false;
+												enemy[j].isArrival = false;
+											}
+										}
+									}
+								}
 
 								break;
 							}
@@ -1661,6 +1707,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						);
 
 						break;
+
+					case ENEMY_TYPE_SOLAR_PANEL_2:
+
+						Novice::DrawEllipse
+						(
+							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
+							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
+							0.0f, 0x0000FF00 + enemy[i].transparency, kFillModeWireFrame
+						);
+
+						break;
+
+					case ENEMY_TYPE_SOLAR_STONE_2:
+
+						Novice::DrawEllipse
+						(
+							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
+							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
+							0.0f, 0x0000FF00 + enemy[i].transparency, kFillModeSolid
+						);
+
+						break;
 					}
 				}
 			}
@@ -1698,7 +1766,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			/*   地面   */
 
-			Novice::DrawBox(0 , kHeight - 100 , kWidth , 100 , 0.0f , 0xFFFFFFFF , kFillModeSolid);
+			Novice::DrawBox(0 , kHeight - 100 , kWidth , 100 , 0.0f , 0x654321FF , kFillModeSolid);
 
 
 			/*   テキスト   */
@@ -2065,7 +2133,7 @@ void LightIlluminate(struct Light* light, char* keys)
 	// スペースキーで、光を広げる
 	if (keys[DIK_SPACE])
 	{
-		if (light->radius.x < 80.0f || light->radius.y < 80.0f)
+		if (light->radius.x < 100.0f || light->radius.y < 100.0f)
 		{
 			light->radius.x += 1.5f;
 			light->radius.y += 1.5f;
@@ -2077,8 +2145,8 @@ void LightIlluminate(struct Light* light, char* keys)
 		
 		if (light->radius.x > 0.0f || light->radius.y > 0.0f)
 		{
-			light->radius.x -= 3.0f;
-			light->radius.y -= 3.0f;
+			light->radius.x -= 4.0f;
+			light->radius.y -= 4.0f;
 		}
 		else
 		{
