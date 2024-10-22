@@ -66,6 +66,9 @@ struct Tutorial
 	// 飛行時間
 	int flyingTimer;
 
+	// 移動時間
+	int moveTimer;
+
 	// 滞空時間
 	int hoveringTimer;
 
@@ -343,7 +346,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		STEP_2,
 		STEP_3,
 		STEP_4,
-		STEP_5
+		STEP_5,
+		STEP_6
 	};
 
 	// 手順
@@ -351,6 +355,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 飛行
 	tutorial.flyingTimer = 0;
+
+	// 移動
+	tutorial.moveTimer = 0;
 
 	// 滞空
 	tutorial.hoveringTimer = 0;
@@ -567,6 +574,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 飛行
 			tutorial.flyingTimer = 0;
+
+			// 移動
+			tutorial.moveTimer = 0;
 
 			// 滞空
 			tutorial.hoveringTimer = 0;
@@ -954,6 +964,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				case STEP_2:
 
+					// 移動
+					if (keys[DIK_A] || keys[DIK_D])
+					{
+						if (player.flug.isFlying)
+						{
+							tutorial.moveTimer++;
+
+							if (tutorial.moveTimer >= 50)
+							{
+								// 次のステップに薄る
+								tutorial.step = STEP_3;
+							}
+						}
+					}
+
+					break;
+
+				case STEP_3:
+
 					// 滞空
 					if (keys[DIK_S])
 					{
@@ -964,7 +993,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							if (tutorial.hoveringTimer >= 50)
 							{
 								// 次のステップに移る
-								tutorial.step = STEP_3;
+								tutorial.step = STEP_4;
 
 								// 敵を出現させる
 								MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 40.0f);
@@ -974,13 +1003,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					break;
 
-				case STEP_3:
+				case STEP_4:
 
 					// 照射
 					if (tutorial.illuminatingTimer >= 50)
 					{
 						// 次のステップに移る
-						tutorial.step = STEP_4;
+						tutorial.step = STEP_5;
 
 						for (int i = 0; i < kEnemyNum; i++)
 						{
@@ -993,13 +1022,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					break;
 
-				case STEP_4:
+				case STEP_5:
 
 					// スイッチを起動
 					if (tutorial.isSwitchOn)
 					{
 						// 次のステップに移る
-						tutorial.step = STEP_5;
+						tutorial.step = STEP_6;
 
 						// 鍵が出現する
 						MakeItem(&item, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 20.0f);
@@ -1265,7 +1294,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							// チュートリアル（照射）
 							if (stageNo == STAGE_TYPE_TUTORIAL)
 							{
-								if (tutorial.step == STEP_3)
+								if (tutorial.step == STEP_4)
 								{
 									tutorial.illuminatingTimer++;
 								}
@@ -1357,16 +1386,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 							case ENEMY_TYPE_SOLAR_PANEL_TURORIAL:
 
-								// エネルギーがたまる
-								enemy[i].energy++;
-
-								// エネルギーが最大になったら、スイッチが起動し、敵が消える（復活、出現フラグがfalseになる）
-								if (enemy[i].energy >= 150)
+								if (stageNo == STAGE_TYPE_TUTORIAL)
 								{
-									enemy[i].respawn.isRespawn = false;
-									enemy[i].isArrival = false;
+									if (tutorial.step == STEP_5)
+									{
+										// エネルギーがたまる
+										enemy[i].energy++;
 
-									tutorial.isSwitchOn = true;
+										// エネルギーが最大になったら、スイッチが起動し、敵が消える（復活、出現フラグがfalseになる）
+										if (enemy[i].energy >= 150)
+										{
+											enemy[i].respawn.isRespawn = false;
+											enemy[i].isArrival = false;
+
+											tutorial.isSwitchOn = true;
+										}
+									}
 								}
 
 
@@ -1456,6 +1491,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 飛行
 			tutorial.flyingTimer = 0;
+
+			// 移動
+			tutorial.moveTimer = 0;
 
 			// 滞空
 			tutorial.hoveringTimer = 0;
