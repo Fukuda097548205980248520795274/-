@@ -241,7 +241,7 @@ void LightIlluminate(struct Light* light, char* keys);
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, kWidth, kHeight);
+	Novice::Initialize(kWindowTitle, kWidth + 300, kHeight);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
@@ -428,6 +428,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 図形の半径
 	item.radius = { 0.0f , 0.0f };
+
+
+	/*   画像   */
+
+	// タイトル
+	int ghTitle = Novice::LoadTexture("./Resources/images/title/title.png");
+
+	// 背景
+	int ghBg = Novice::LoadTexture("./Resources/images/Bg/Bg.png");
+
+	// プレイヤー
+	int ghPlayerShine = Novice::LoadTexture("./Resources/images/player/player.png");
+
+	// 敵
+	int ghEnemyStone = Novice::LoadTexture("./Resources/images/enemy/stone.png");
+
+
+	/*   テキスト   */
+
+	// ゲーム
+	int ghTextRunAway = Novice::LoadTexture("./Resources/texts/game/runAway.png");
+
+	// ステージ
+	int ghTextStage[3];
+	ghTextStage[0] = Novice::LoadTexture("./Resources/texts/stage/stage1.png");
+	ghTextStage[1] = Novice::LoadTexture("./Resources/texts/stage/stage2.png");
+	ghTextStage[2] = Novice::LoadTexture("./Resources/texts/stage/stage3.png");
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -881,6 +908,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ゲームフレームを5フレームまで進める
 			if (gameFrame < 5)
+			{
+				gameFrame++;
+			}
+
+			// 逃げている（逃げるフラグがtrueである）ときに、ゲームフレームを動かす
+			if (player.flug.isRunAway)
 			{
 				gameFrame++;
 			}
@@ -1471,6 +1504,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/// ↓ スタート画面ここから
 			/// 
 
+			switch (startNo)
+			{
+			case START_TYPE_ORPNING:
+
+				Novice::DrawSprite(0, 0, ghTitle, 1, 1, 0.0f, 0xFFFFFFFF);
+
+				break;
+
+			case START_TYPE_STAGE_SELECT:
+
+				switch (menuNo)
+				{
+				case MENU_TYPE_STAGE_1:
+
+					Novice::DrawBox(64, 64, 320, 64, 0.0f, 0xFFFFFF33, kFillModeSolid);
+
+					break;
+
+				case MENU_TYPE_STAGE_2:
+
+					Novice::DrawBox(64, 64 + 150, 320, 64, 0.0f, 0xFFFFFF33, kFillModeSolid);
+
+					break;
+
+				case MENU_TYPE_STAGE_3:
+
+					Novice::DrawBox(64, 64 + 150 * 2, 320, 64, 0.0f, 0xFFFFFF33, kFillModeSolid);
+
+					break;
+				}
+
+				for (int i = 0; i < 3; i++)
+				{
+					Novice::DrawSprite(64 , 64 + i * 150 , ghTextStage[i] , 1,1,0.0f , 0xFFFFFFFF);
+				}
+
+				break;
+			}
+
 			///
 			/// ↑ スタート画面ここまで
 			/// 
@@ -1488,7 +1560,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			------------------------*/
 
 			// 背景
-			Novice::DrawBox(0,0,kWidth,kHeight , 0.0f , 0x000055FF , kFillModeSolid);
+			if (player.flug.isRunAway == false)
+			{
+				Novice::DrawSprite(0, 0, ghBg, 1, 1, 0.0f, 0xFFFFFFFF);
+			}
+			else
+			{
+				Novice::DrawSprite(0, 0, ghBg, 1, 1, 0.0f, 0xFF0000FF);
+			}
 
 
 			/*   光   */
@@ -1500,7 +1579,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				(
 					static_cast<int>(light.pos.screen.x), static_cast<int>(light.pos.screen.y),
 					static_cast<int>(light.radius.x), static_cast<int>(light.radius.y),
-					0.0f, 0x5555FFFF, kFillModeSolid
+					0.0f, 0xFFFF8833, kFillModeSolid
 				);
 			}
 
@@ -1516,11 +1595,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 					case ENEMY_TYPE_STONE:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0xFFFFFF00 + enemy[i].transparency, kFillModeSolid
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x) , static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0,0,32,32,ghEnemyStone , 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
@@ -1581,11 +1662,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 復活している（復活フラグがtrueである）とき
 			if (player.respawn.isRespawn)
 			{
-				Novice::DrawEllipse
+				Novice::DrawQuad
 				(
-					static_cast<int>(player.pos.screen.x), static_cast<int>(player.pos.screen.y),
-					static_cast<int>(player.radius.x), static_cast<int>(player.radius.y),
-					0.0f, 0xFFFFFFFF, kFillModeSolid
+					static_cast<int>(player.pos.screen.x - player.radius.x) , static_cast<int>(player.pos.screen.y - player.radius.y) ,
+					static_cast<int>(player.pos.screen.x + player.radius.x), static_cast<int>(player.pos.screen.y - player.radius.y),
+					static_cast<int>(player.pos.screen.x - player.radius.x), static_cast<int>(player.pos.screen.y + player.radius.y),
+					static_cast<int>(player.pos.screen.x + player.radius.x), static_cast<int>(player.pos.screen.y + player.radius.y),
+					0,0,40,40,ghPlayerShine,0xFFFFFFFF
 				);
 			}
 
@@ -1593,6 +1676,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			/*   地面   */
 
 			Novice::DrawBox(0 , kHeight - 100 , kWidth , 100 , 0.0f , 0xFFFFFFFF , kFillModeSolid);
+
+
+			/*   テキスト   */
+
+			if (player.flug.isRunAway)
+			{
+				if (gameFrame < 100)
+				{
+					Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextRunAway, 2, 2, 0.0f, 0xFFFFFFFF);
+				}
+			}
 
 
 			///
