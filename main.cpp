@@ -442,12 +442,22 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 背景
 	int ghBg = Novice::LoadTexture("./Resources/images/Bg/Bg.png");
+	int ghGameOver = Novice::LoadTexture("./Resources/images/Bg/gameOver.png");
+	int ghGameClear = Novice::LoadTexture("./Resources/images/Bg/gameClear.png");
+
+	// キー
+	int ghAkey = Novice::LoadTexture("./Resources/images/keys/A_Key.png");
+	int ghSkey = Novice::LoadTexture("./Resources/images/keys/S_Key.png");
+	int ghDkey = Novice::LoadTexture("./Resources/images/keys/D_Key.png");
+	int ghSpacekey = Novice::LoadTexture("./Resources/images/keys/Space_Key.png");
 
 	// プレイヤー
 	int ghPlayerShine = Novice::LoadTexture("./Resources/images/player/player.png");
+	int ghItemKey = Novice::LoadTexture("./Resources/images/player/itemKey.png");
 
 	// 敵
 	int ghEnemyStone = Novice::LoadTexture("./Resources/images/enemy/stone.png");
+	int ghEnemySwitchOn = Novice::LoadTexture("./Resources/images/enemy/switchOn.png");
 
 
 	/*   テキスト   */
@@ -887,7 +897,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<int>(kWidth) - 50.0f - i * 25.0f, 450.0f, 0.0f, 0.0f, 10.0f);
 					}
 
-					MakeItem(&item , 350.0f , 600.0f , 0.0f , 0.0f , 10.0f);
+					MakeItem(&item , 350.0f , 600.0f , 0.0f , 0.0f , 20.0f);
 				}
 
 				break;
@@ -918,7 +928,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 					}
 
-					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 600.0f, 0.0f, 0.0f, 20.0f);
 				}
 
 				break;
@@ -930,7 +940,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					for (int i = 0; i < 8; i++)
 					{
 
-						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 20.0f);
 					}
 				}
 
@@ -1638,6 +1648,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Novice::DrawSprite(0, 0, ghBg, 1, 1, 0.0f, 0xFF0000FF);
 			}
 
+			// キー
+			if (player.flug.isFlying)
+			{
+				Novice::DrawSprite(740, 100, ghAkey, 1.5f, 1.5f, 0.0f, 0xFFFFFFFF);
+				Novice::DrawSprite(920, 100, ghDkey, 1.5f, 1.5f, 0.0f, 0xFFFFFFFF);
+				Novice::DrawSprite(830, 100, ghSkey, 1.5f, 1.5f, 0.0f, 0xFFFFFFFF);
+			}
+
+			Novice::DrawSprite(800, 300, ghSpacekey, 1.5f, 1.5f, 0.0f, 0xFFFFFFFF);
+
 
 			/*   光   */
 
@@ -1731,6 +1751,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						break;
 					}
 				}
+
+				// 復活していない（復活フラグがfalseである）とき
+				if (enemy[i].respawn.isRespawn == false)
+				{
+					if (enemy[i].respawn.timer <= 119 && enemy[i].respawn.timer > 119 - 25)
+					{
+						switch (enemy[i].type)
+						{
+						case ENEMY_TYPE_SOLAR_STONE_1:
+
+							Novice::DrawQuad
+							(
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFFFFFFFF
+							);
+
+							break;
+
+						case ENEMY_TYPE_SOLAR_STONE_2:
+
+							Novice::DrawQuad
+							(
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFFFFFFFF
+							);
+
+							break;
+						}
+					}
+				}
 			}
 
 
@@ -1739,11 +1795,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// 出現している（出現フラグがtrueである）とき
 			if (item.isArrival)
 			{
-				Novice::DrawEllipse
+				Novice::DrawQuad
 				(
-					static_cast<int>(item.pos.screen.x) , static_cast<int>(item.pos.screen.y),
-					static_cast<int>(item.radius.x) , static_cast<int>(item.radius.y) ,
-					0.0f , 0xFFFF00FF , kFillModeSolid
+					static_cast<int>(item.pos.screen.x - item.radius.x), static_cast<int>(item.pos.screen.y - item.radius.y),
+					static_cast<int>(item.pos.screen.x - item.radius.x), static_cast<int>(item.pos.screen.y + item.radius.y),
+					static_cast<int>(item.pos.screen.x + item.radius.x), static_cast<int>(item.pos.screen.y - item.radius.y),
+					static_cast<int>(item.pos.screen.x + item.radius.x), static_cast<int>(item.pos.screen.y + item.radius.y),
+					0, 0, 20, 20, ghItemKey, 0xFFFFFFFF
 				);
 			}
 
@@ -1797,6 +1855,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			///
 			/// ↓ ゲーム終了画面ここから
 			/// 
+
+			if (isClear)
+			{
+				Novice::DrawSprite(0, 0, ghGameClear, 2, 2, 0.0f, 0xFFFFFFFF);
+			}
+			else
+			{
+				Novice::DrawSprite(0, 0, ghGameOver, 2, 2, 0.0f, 0xFFFFFFFF);
+			}
 
 			///
 			/// ↑ ゲーム終了画面ここまで
