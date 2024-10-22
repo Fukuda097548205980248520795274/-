@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-const char kWindowTitle[] = "LC1C_20_フクダソウワ_ヒカリウム";
+const char kWindowTitle[] = "LC1C_20_フクダソウワ_ピカピカ風船";
 
 
 /*-----------------
@@ -851,15 +851,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<int>(kWidth) - 50.0f - i * 25.0f, 450.0f, 0.0f, 0.0f, 10.0f);
 					}
 
-					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, 200.0f, 25.0f, 0.0f, 0.0f, 10.0f);
-					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_1, 200.0f, 50.0f, 0.0f, 0.0f, 10.0f);
-
 					MakeItem(&item , 350.0f , 600.0f , 0.0f , 0.0f , 10.0f);
 				}
 
 				break;
 
 			case STAGE_TYPE_2:
+
+				for (int i = 0; i < 8; i++)
+				{
+					if (i == 2)
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+					}
+					else
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 300.0f + i * 25.0f , 0.0f, 0.0f, 10.0f);
+					}
+
+					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
+				}
 
 				break;
 
