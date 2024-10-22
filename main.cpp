@@ -57,6 +57,25 @@ struct Flug
 	int isRunAway;
 };
 
+// チュートリアル
+struct Tutorial
+{
+	// 手順
+	int step;
+
+	// 飛行時間
+	int flyingTimer;
+
+	// 滞空時間
+	int hoveringTimer;
+
+	// 照射時間
+	int illuminatingTimer;
+
+	// スイッチを起動したかどうか
+	int isSwitchOn;
+};
+
 // 復活
 struct Respawn
 {
@@ -290,6 +309,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ステージの種類
 	enum STAGE_TYPE
 	{
+		STAGE_TYPE_TUTORIAL,
 		STAGE_TYPE_1,
 		STAGE_TYPE_2,
 		STAGE_TYPE_3
@@ -312,6 +332,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int isClear = false;
 
 
+	/*   チュートリアル   */
+
+	// 構造体
+	struct Tutorial tutorial;
+
+	enum STEP
+	{
+		STEP_1,
+		STEP_2,
+		STEP_3,
+		STEP_4,
+		STEP_5
+	};
+
+	// 手順
+	tutorial.step = -1;
+
+	// 飛行
+	tutorial.flyingTimer = 0;
+
+	// 滞空
+	tutorial.hoveringTimer = 0;
+
+	// 照射
+	tutorial.illuminatingTimer = 0;
+
+	// スイッチ起動
+	tutorial.isSwitchOn = false;
 
 
 	/*   プレイヤー   */
@@ -367,7 +415,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ENEMY_TYPE_SOLAR_PANEL_1,
 		ENEMY_TYPE_SOLAR_STONE_1,
 		ENEMY_TYPE_SOLAR_PANEL_2,
-		ENEMY_TYPE_SOLAR_STONE_2
+		ENEMY_TYPE_SOLAR_STONE_2,
+		ENEMY_TYPE_SOLAR_PANEL_TURORIAL,
 	};
 	
 	for (int i = 0; i < kEnemyNum; i++)
@@ -511,6 +560,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			isClear = false;
 
 
+			/*   チュートリアル   */
+
+			// 手順
+			tutorial.step = -1;
+
+			// 飛行
+			tutorial.flyingTimer = 0;
+
+			// 滞空
+			tutorial.hoveringTimer = 0;
+
+			// 照射
+			tutorial.illuminatingTimer = 0;
+
+			// スイッチ起動
+			tutorial.isSwitchOn = false;
+
+
 			/*   プレイヤー   */
 
 			// 復活
@@ -631,7 +698,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (menuNo == MENU_TYPE_START)
 				{
-					// スペースキーを押すと、ステージセレクトに切り替わる
+					// スペースキーを押すと、チュートリアルが開始する
 
 					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
 					{
@@ -648,6 +715,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 						if (gameFrame >= 30)
 						{
+							// ゲーム画面に移る
+							screenNo = SCREEN_TYPE_GAME;
+
+							// チュートリアルステージ
+							stageNo = STAGE_TYPE_TUTORIAL;
+
+							// ステップ1から開始する
+							tutorial.step = STEP_1;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
+
+
 							// ステージセレクトに切り替わる
 							startNo = START_TYPE_STAGE_SELECT;
 
@@ -703,13 +783,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							PlayerInitialState(&player);
 
 
-							// オープニング画面に切り替わる
-							startNo = START_TYPE_ORPNING;
-
-							// スタートボタンを選ぶ
-							menuNo = MENU_TYPE_START;
-
-
 							// ゲームが止まる（ゲームフラグがfalseになる）
 							isGameOperation = false;
 
@@ -756,13 +829,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 							// プレイヤーの初期状態
 							PlayerInitialState(&player);
-
-
-							// オープニング画面に切り替わる
-							startNo = START_TYPE_ORPNING;
-
-							// スタートボタンを選ぶ
-							menuNo = MENU_TYPE_START;
 
 
 							// ゲームが止まる（ゲームフラグがfalseになる）
@@ -822,13 +888,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							PlayerInitialState(&player);
 
 
-							// オープニング画面に切り替わる
-							startNo = START_TYPE_ORPNING;
-
-							// スタートボタンを選ぶ
-							menuNo = MENU_TYPE_START;
-
-
 							// ゲームが止まる（ゲームフラグがfalseになる）
 							isGameOperation = false;
 
@@ -872,6 +931,85 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			switch (stageNo)
 			{
+			case STAGE_TYPE_TUTORIAL:
+
+				// ステップ
+				switch (tutorial.step)
+				{
+				case STEP_1:
+
+					// 飛行
+					if (player.flug.isFlying)
+					{
+						tutorial.flyingTimer++;
+
+						if (tutorial.flyingTimer >= 50)
+						{
+							// 次のステップに移る
+							tutorial.step = STEP_2;
+						}
+					}
+
+					break;
+
+				case STEP_2:
+
+					// 滞空
+					if (keys[DIK_S])
+					{
+						if (player.flug.isFlying)
+						{
+							tutorial.hoveringTimer++;
+
+							if (tutorial.hoveringTimer >= 50)
+							{
+								// 次のステップに移る
+								tutorial.step = STEP_3;
+
+								// 敵を出現させる
+								MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 40.0f);
+							}
+						}
+					}
+
+					break;
+
+				case STEP_3:
+
+					// 照射
+					if (tutorial.illuminatingTimer >= 50)
+					{
+						// 次のステップに移る
+						tutorial.step = STEP_4;
+
+						for (int i = 0; i < kEnemyNum; i++)
+						{
+							enemy[i].isArrival = false;
+						}
+
+						// 敵を出現させる
+						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_TURORIAL, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 40.0f);
+					}
+
+					break;
+
+				case STEP_4:
+
+					// スイッチを起動
+					if (tutorial.isSwitchOn)
+					{
+						// 次のステップに移る
+						tutorial.step = STEP_5;
+
+						// 鍵が出現する
+						MakeItem(&item, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 20.0f);
+					}
+
+					break;
+				}
+
+				break;
+
 			case STAGE_TYPE_1:
 
 				if (stageFrame == 0)
@@ -916,9 +1054,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2) + 100.0f, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
 						}
-
-						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 					}
+
+					for (int i = 0; i < 8; i++)
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 425.0f - i * 25.0f, 250.0f, 0.0f, 0.0f, 10.0f);
+
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 25.0f + i * 25.0f, 350.0f, 0.0f, 0.0f, 10.0f);
+
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 425.0f - i * 25.0f, 450.0f, 0.0f, 0.0f, 10.0f);
+					}
+
 
 					for (int i = 0; i < 8; i++)
 					{
@@ -929,6 +1075,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					}
 
 					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 600.0f, 0.0f, 0.0f, 20.0f);
+
+					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
 
 				break;
@@ -937,11 +1085,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (stageFrame == 0)
 				{
-					for (int i = 0; i < 8; i++)
-					{
-
-						MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 20.0f);
-					}
+					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
 
 				break;
@@ -967,7 +1111,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			// プレイヤーが復活処理を進めたら、ゲームが終了する
 			if (player.respawn.timer <= 5)
 			{
-				screenNo = SCREEN_TYPE_END;
+				if (stageNo != STAGE_TYPE_TUTORIAL)
+				{
+					screenNo = SCREEN_TYPE_END;
+				}
 			}
 
 			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了（クリア）する
@@ -975,13 +1122,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 				if (player.pos.world.y - player.radius.y <= 0.0f)
 				{
-					screenNo = SCREEN_TYPE_END;
+					if (stageNo != STAGE_TYPE_TUTORIAL)
+					{
+						screenNo = SCREEN_TYPE_END;
 
-					// ゲームクリアになる（クリアフラグがtrueになる）
-					isClear = true;
+						// ゲームクリアになる（クリアフラグがtrueになる）
+						isClear = true;
 
-					// ゲームフレームを初期化する
-					gameFrame = 0;
+						// ゲームフレームを初期化する
+						gameFrame = 0;
+					}
+					else
+					{
+						screenNo = SCREEN_TYPE_START;
+					}
 				}
 			}
 
@@ -1107,6 +1261,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							{
 								enemy[i].transparency = 255;
 							}
+
+							// チュートリアル（照射）
+							if (stageNo == STAGE_TYPE_TUTORIAL)
+							{
+								if (tutorial.step == STEP_3)
+								{
+									tutorial.illuminatingTimer++;
+								}
+							}
+
 						}
 						else
 						{
@@ -1141,6 +1305,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							{
 							case ENEMY_TYPE_SOLAR_PANEL_1:
 
+								// エネルギーがたまる
 								enemy[i].energy++;
 
 								// エネルギーが最大になったら、スイッチと連動している石が消える（復活、出現フラグがfalseになる）
@@ -1166,6 +1331,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 							case ENEMY_TYPE_SOLAR_PANEL_2:
 
+								// エネルギーがたまる
 								enemy[i].energy++;
 
 								// エネルギーが最大になったら、スイッチと連動している石が消える（復活、出現フラグがfalseになる）
@@ -1186,6 +1352,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 										}
 									}
 								}
+
+								break;
+
+							case ENEMY_TYPE_SOLAR_PANEL_TURORIAL:
+
+								// エネルギーがたまる
+								enemy[i].energy++;
+
+								// エネルギーが最大になったら、スイッチが起動し、敵が消える（復活、出現フラグがfalseになる）
+								if (enemy[i].energy >= 150)
+								{
+									enemy[i].respawn.isRespawn = false;
+									enemy[i].isArrival = false;
+
+									tutorial.isSwitchOn = true;
+								}
+
 
 								break;
 							}
@@ -1264,6 +1447,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// ステージフレーム
 			stageFrame = 0;
+
+
+			/*   チュートリアル   */
+
+			// 手順
+			tutorial.step = -1;
+
+			// 飛行
+			tutorial.flyingTimer = 0;
+
+			// 滞空
+			tutorial.hoveringTimer = 0;
+
+			// 照射
+			tutorial.illuminatingTimer = 0;
+
+			// スイッチ起動
+			tutorial.isSwitchOn = false;
 
 
 			/*   プレイヤー   */
@@ -1749,6 +1950,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						);
 
 						break;
+
+					case ENEMY_TYPE_SOLAR_PANEL_TURORIAL:
+
+						Novice::DrawEllipse
+						(
+							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
+							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
+							0.0f, 0xFFFFFF00 + enemy[i].transparency, kFillModeWireFrame
+						);
+
+						break;
 					}
 				}
 
@@ -1829,9 +2041,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			/*   テキスト   */
 
-			if (stageFrame < 80)
+			if (stageNo != STAGE_TYPE_TUTORIAL)
 			{
-				Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextGetKey, 2, 2, 0.0f, 0xFFFFFFFF);
+				if (stageFrame < 80)
+				{
+					Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextGetKey, 2, 2, 0.0f, 0xFFFFFFFF);
+				}
 			}
 
 			// プレイヤーが逃げて（逃げフラグになって）100フレームに表示する
