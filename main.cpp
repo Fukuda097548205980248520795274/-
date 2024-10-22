@@ -522,6 +522,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int ghTextGetKey = Novice::LoadTexture("./Resources/texts/game/getKey.png");
 	int ghTextRunAway = Novice::LoadTexture("./Resources/texts/game/runAway.png");
 
+	// チュートリアル
+	int ghTextTutorialFlying = Novice::LoadTexture("./Resources/texts/tutorial/tutorialFlying.png");
+	int ghTextTutorialMove = Novice::LoadTexture("./Resources/texts/tutorial/tutorialMove.png");
+	int ghTextTutorialHovering = Novice::LoadTexture("./Resources/texts/tutorial/tutorialHovering.png");
+	int ghTextTutorialIllminate = Novice::LoadTexture("./Resources/texts/tutorial/tutorialIllminate.png");
+	int ghTextTutorialSwitch = Novice::LoadTexture("./Resources/texts/tutorial/tutorialSwitch.png");
+
 	// ステージ
 	int ghTextStage[3];
 	ghTextStage[0] = Novice::LoadTexture("./Resources/texts/stage/stage1.png");
@@ -996,7 +1003,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 								tutorial.step = STEP_4;
 
 								// 敵を出現させる
-								MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 40.0f);
+								MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth / 2), 400.0f, 0.0f, 0.0f, 40.0f);
 							}
 						}
 					}
@@ -1017,7 +1024,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 
 						// 敵を出現させる
-						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_TURORIAL, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 40.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_TURORIAL, static_cast<float>(kWidth / 2), 400.0f, 0.0f, 0.0f, 40.0f);
 					}
 
 					break;
@@ -1031,7 +1038,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						tutorial.step = STEP_6;
 
 						// 鍵が出現する
-						MakeItem(&item, static_cast<float>(kWidth / 2), 500.0f, 0.0f, 0.0f, 20.0f);
+						MakeItem(&item, static_cast<float>(kWidth / 2), 550.0f, 0.0f, 0.0f, 20.0f);
 					}
 
 					break;
@@ -1887,6 +1894,58 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Novice::DrawSprite(0, 0, ghBg, 1, 1, 0.0f, 0xFF0000FF);
 			}
 
+			// チュートリアル
+			switch (tutorial.step)
+			{
+			case STEP_1:
+
+				Novice::DrawSprite
+				(kWidth / 2 - 128 , kHeight / 2 , ghTextTutorialFlying , 1 , 1 ,0.0f , 0xFFFFFFAA);
+
+				break;
+
+			case STEP_2:
+
+				Novice::DrawSprite
+				(kWidth / 2 - 128, kHeight / 2, ghTextTutorialMove, 1, 1, 0.0f, 0xFFFFFFAA);
+
+				break;
+
+			case STEP_3:
+
+				Novice::DrawSprite
+				(kWidth / 2 - 128, kHeight / 2, ghTextTutorialHovering, 1, 1, 0.0f, 0xFFFFFFAA);
+
+				break;
+
+			case STEP_4:
+
+				Novice::DrawSprite
+				(kWidth / 2 - 128, kHeight / 2, ghTextTutorialIllminate, 1, 1, 0.0f, 0xFFFFFFAA);
+
+				break;
+
+			case STEP_5:
+
+				Novice::DrawSprite
+				(kWidth / 2 - 128, kHeight / 2, ghTextTutorialSwitch, 1, 1, 0.0f, 0xFFFFFFAA);
+
+				break;
+
+			case STEP_6:
+
+				if (player.flug.isRunAway == false)
+				{
+					Novice::DrawSprite(kWidth / 2 - 128, kHeight / 2, ghTextGetKey, 1, 1, 0.0f, 0xFFFFFFFF);
+				}
+				else
+				{
+					Novice::DrawSprite(kWidth / 2 - 128, kHeight / 2, ghTextRunAway, 1, 1, 0.0f, 0xFFFFFFFF);
+				}
+
+				break;
+			}
+
 			// キー
 			if (player.flug.isFlying)
 			{
@@ -2085,14 +2144,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				{
 					Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextGetKey, 2, 2, 0.0f, 0xFFFFFFFF);
 				}
-			}
 
-			// プレイヤーが逃げて（逃げフラグになって）100フレームに表示する
-			if (player.flug.isRunAway)
-			{
-				if (stageFrame < 200)
+				// プレイヤーが逃げて（逃げフラグになって）100フレームに表示する
+				if (player.flug.isRunAway)
 				{
-					Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextRunAway, 2, 2, 0.0f, 0xFFFFFFFF);
+					if (stageFrame < 200)
+					{
+						Novice::DrawSprite(kWidth / 2 - 256, kHeight / 2 - 64, ghTextRunAway, 2, 2, 0.0f, 0xFFFFFFFF);
+					}
 				}
 			}
 
