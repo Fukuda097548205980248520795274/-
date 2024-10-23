@@ -419,6 +419,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	{
 		ENEMY_TYPE_STONE,
 		ENEMY_TYPE_DENGER,
+		ENEMY_TYPE_BIRD,
 		ENEMY_TYPE_SOLAR_PANEL_1,
 		ENEMY_TYPE_SOLAR_STONE_1,
 		ENEMY_TYPE_SOLAR_PANEL_2,
@@ -513,7 +514,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 敵
 	int ghEnemyStone = Novice::LoadTexture("./Resources/images/enemy/stone.png");
+	int ghEnemyBird = Novice::LoadTexture("./Resources/images/enemy/spaceDebris.png");
 	int ghEnemySwitchOn = Novice::LoadTexture("./Resources/images/enemy/switchOn.png");
+
+	int ghSolarStone[2];
+	ghSolarStone[0] = Novice::LoadTexture("./Resources/images/enemy/solarStone1.png");
+	ghSolarStone[1] = Novice::LoadTexture("./Resources/images/enemy/solarStone2.png");
+
+	int ghSolarPanel[3];
+	ghSolarPanel[0] = Novice::LoadTexture("./Resources/images/enemy/solarPanel1.png");
+	ghSolarPanel[1] = Novice::LoadTexture("./Resources/images/enemy/solarPanel2.png");
+	ghSolarPanel[2] = Novice::LoadTexture("./Resources/images/enemy/solarPanelTutorial.png");
 
 
 	/*   テキスト   */
@@ -1092,25 +1103,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 					}
 
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 18; i++)
 					{
-						MakeEnemy(enemy, ENEMY_TYPE_STONE, 425.0f - i * 25.0f, 250.0f, 0.0f, 0.0f, 10.0f);
-
-						MakeEnemy(enemy, ENEMY_TYPE_STONE, 25.0f + i * 25.0f, 350.0f, 0.0f, 0.0f, 10.0f);
-
-						MakeEnemy(enemy, ENEMY_TYPE_STONE, 425.0f - i * 25.0f, 450.0f, 0.0f, 0.0f, 10.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_1, 425.0f - i * 25.0f, 300.0f, 0.0f, 0.0f, 10.0f);
 					}
 
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 25.0f, 350.0f, 2.0f, 0.0f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 425.0f, 400.0f, -2.0f, 0.0f, 10.0f);
 
 					for (int i = 0; i < 8; i++)
 					{
 						for (int j = 0; j < 9; j++)
 						{
-							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_2, 475.0f + 25 * j, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_2, 475.0f + 25.0f * j, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
 						}
 					}
 
-					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 600.0f, 0.0f, 0.0f, 20.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 475.0f, 0.0f, 0.0f, 10.0f);
 
 					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
@@ -1151,6 +1160,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				{
 					screenNo = SCREEN_TYPE_END;
 				}
+
+				player.pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
+				player.radius = { 10.0f , 10.0f };
 			}
 
 			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了（クリア）する
@@ -1198,7 +1210,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			--------------------*/
 
 			// プレイヤーの操作
-			PlayerMove(&player , keys);
+			if (player.respawn.isRespawn)
+			{
+				PlayerMove(&player, keys);
+			}
 
 			// 光を照らす操作
 			LightIlluminate(&light, keys);
@@ -1226,6 +1241,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						enemy[i].radius.x = static_cast<float>(kWidth / 2);
 						enemy[i].radius.y += 0.5f;
+
+						break;
+
+					case ENEMY_TYPE_BIRD:
+
+						enemy[i].arrivalTimer++;
+
+						if (enemy[i].arrivalTimer >= 200)
+						{
+							enemy[i].vel.x *= -1;
+							enemy[i].vel.y *= -1;
+
+							enemy[i].arrivalTimer = 0;
+						}
 
 						break;
 					}
@@ -2004,57 +2033,80 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						break;
 
+					case ENEMY_TYPE_BIRD:
+
+						Novice::DrawQuad
+						(
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghEnemyBird, 0xFFFFFF00 + enemy[i].transparency
+						);
+
+						break;
+
 					case ENEMY_TYPE_SOLAR_PANEL_1:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0xFF000000 + enemy[i].transparency, kFillModeWireFrame
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghSolarPanel[0], 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
 
 					case ENEMY_TYPE_SOLAR_STONE_1:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0xFF000000 + enemy[i].transparency, kFillModeSolid
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghSolarStone[0], 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
 
 					case ENEMY_TYPE_SOLAR_PANEL_2:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0x0000FF00 + enemy[i].transparency, kFillModeWireFrame
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghSolarPanel[1], 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
 
 					case ENEMY_TYPE_SOLAR_STONE_2:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0x0000FF00 + enemy[i].transparency, kFillModeSolid
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghSolarStone[1], 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
 
 					case ENEMY_TYPE_SOLAR_PANEL_TURORIAL:
 
-						Novice::DrawEllipse
+						Novice::DrawQuad
 						(
-							static_cast<int>(enemy[i].pos.screen.x), static_cast<int>(enemy[i].pos.screen.y),
-							static_cast<int>(enemy[i].radius.x), static_cast<int>(enemy[i].radius.y),
-							0.0f, 0xFFFFFF00 + enemy[i].transparency, kFillModeWireFrame
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+							0, 0, 32, 32, ghSolarPanel[2], 0xFFFFFF00 + enemy[i].transparency
 						);
 
 						break;
