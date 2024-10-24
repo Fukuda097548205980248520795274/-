@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-const char kWindowTitle[] = "LC1C_20_フクダソウワ_ピカピカ風船";
+const char kWindowTitle[] = "1129_ぴかぴか風船";
 
 
 /*-----------------
@@ -121,6 +121,32 @@ struct Light
 	struct Radius2 radius;
 };
 
+// 弾
+struct Bullet
+{
+	// 復活
+	struct Respawn respawn;
+
+	// 発射しているかどうか（発射フラグ）
+	int isShot;
+
+	// 発射している時間
+	int shotTimer;
+
+
+	// 位置
+	struct Pos pos;
+
+	// 移動速度
+	struct Vel2 vel;
+
+	// 加速度
+	struct Acceleration2 acceleration;
+
+	// 図形の半径
+	struct Radius2 radius;
+};
+
 // 敵
 struct Enemy
 {
@@ -197,6 +223,9 @@ const int kWidth = 700;
 // 敵の数
 const int kEnemyNum = 256;
 
+// 弾の数
+const int kBulletNum = 64;
+
 
 /*---------------
     関数を作る
@@ -258,6 +287,17 @@ void MakeItem(struct Item* item, float posX, float posY, float velX, float velY,
 /// <param name="keys">キー</param>
 void LightIlluminate(struct Light* light, char* keys);
 
+/// <summary>
+/// 弾を作る
+/// </summary>
+/// <param name="bullet">弾</param>
+/// <param name="posX">X軸の座標</param>
+/// <param name="posY">Y軸の座標</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeBullet(struct Bullet* bullet, float posX, float posY, float velX, float velY, float radius);
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -303,7 +343,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		MENU_TYPE_START,
 		MENU_TYPE_STAGE_1,
 		MENU_TYPE_STAGE_2,
-		MENU_TYPE_STAGE_3
+		MENU_TYPE_STAGE_3,
+		MENU_TYPE_STAGE_TUTORIAL
 	};
 
 	// 現在のメニュー
@@ -409,6 +450,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	light.radius = { 0.0f , 0.0f };
 
 
+	/*   弾   */
+
+	// 構造体
+	struct Bullet bullet[kBulletNum];
+
+	for (int i = 0; i < kBulletNum; i++)
+	{
+		// 復活
+		bullet[i].respawn.isRespawn = true;
+		bullet[i].respawn.timer = 120;
+
+		// 発射しているかどうか（発射フラグ）
+		bullet[i].isShot = false;
+
+		// 発射している時間
+		bullet[i].shotTimer = 0;
+
+		// 位置
+		bullet[i].pos.world = { 0.0f , 0.0f };
+		bullet[i].pos.screen = CoordinateTransformation(player.pos.world);
+
+		// 移動速度
+		bullet[i].vel = { 0.0f , 0.0f };
+
+		// 加速度
+		bullet[i].acceleration = { 0.0f , 0.0f };
+
+		// 図形の半径
+		bullet[i].radius = { 0.0f  , 0.0f };
+	}
+
+
 	/*   敵   */
 
 	// 構造体
@@ -420,6 +493,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ENEMY_TYPE_STONE,
 		ENEMY_TYPE_DENGER,
 		ENEMY_TYPE_BIRD,
+		ENEMY_TYPE_GUN,
 		ENEMY_TYPE_SOLAR_PANEL_1,
 		ENEMY_TYPE_SOLAR_STONE_1,
 		ENEMY_TYPE_SOLAR_PANEL_2,
@@ -499,6 +573,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// 背景
 	int ghBg = Novice::LoadTexture("./Resources/images/Bg/Bg.png");
+	int ghStageBg = Novice::LoadTexture("./Resources/images/Bg/stageBg.png");
 	int ghGameOver = Novice::LoadTexture("./Resources/images/Bg/gameOver.png");
 	int ghGameClear = Novice::LoadTexture("./Resources/images/Bg/gameClear.png");
 
@@ -511,6 +586,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// プレイヤー
 	int ghPlayerShine = Novice::LoadTexture("./Resources/images/player/player.png");
 	int ghItemKey = Novice::LoadTexture("./Resources/images/player/itemKey.png");
+	int ghPlayerDeath = Novice::LoadTexture("./Resources/images/player/playerDeath.png");
 
 	// 敵
 	int ghEnemyStone = Novice::LoadTexture("./Resources/images/enemy/stone.png");
@@ -532,6 +608,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	// ゲーム
 	int ghTextGetKey = Novice::LoadTexture("./Resources/texts/game/getKey.png");
 	int ghTextRunAway = Novice::LoadTexture("./Resources/texts/game/runAway.png");
+	int ghTextSpacePush = Novice::LoadTexture("./Resources/texts/game/spacePush.png");
 
 	// チュートリアル
 	int ghTextTutorialFlying = Novice::LoadTexture("./Resources/texts/tutorial/tutorialFlying.png");
@@ -541,10 +618,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int ghTextTutorialSwitch = Novice::LoadTexture("./Resources/texts/tutorial/tutorialSwitch.png");
 
 	// ステージ
-	int ghTextStage[3];
+	int ghTextStage[4];
 	ghTextStage[0] = Novice::LoadTexture("./Resources/texts/stage/stage1.png");
 	ghTextStage[1] = Novice::LoadTexture("./Resources/texts/stage/stage2.png");
 	ghTextStage[2] = Novice::LoadTexture("./Resources/texts/stage/stage3.png");
+	ghTextStage[3] = Novice::LoadTexture("./Resources/texts/stage/stageTutorial.png");
+
+
+	/*   BGM   */
+
+	// ゲームBGM
+	int shGameBgm = Novice::LoadAudio("./Resources/sounds/bgm/gameBgm.mp3");
+	int phGameBgm = -1;
+
+
+	/*   SE   */
+
+	// 決定
+	int shSeEnter = Novice::LoadAudio("./Resources/sounds/se/enter.mp3");
+
+	// 飛行音
+	int shSeFlying = Novice::LoadAudio("./Resources/sounds/se/flying.mp3");
+
+	// 警報
+	int shSeDenger = Novice::LoadAudio("./Resources/sounds/se/denger.mp3");
+
+	// ガラスを割れる
+	int shSeGlass = Novice::LoadAudio("./Resources/sounds/se/glass.mp3");
+
+	// 爆発
+	int shSeExplosion = Novice::LoadAudio("./Resources/sounds/se/explosion.mp3");
+
+	// 勝利
+	int shSeWin = Novice::LoadAudio("./Resources/sounds/se/win.mp3");
+
+	// 負け
+	int shSeLose = Novice::LoadAudio("./Resources/sounds/se/lose.mp3");
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -559,6 +668,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
+
+		if (!Novice::IsPlayingAudio(phGameBgm) || phGameBgm == -1)
+		{
+			phGameBgm = Novice::PlayAudio(shGameBgm, 1, 0.2f);
+		}
 
 		// 画面切り替え
 		switch (screenNo)
@@ -628,6 +742,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 図形の半径
 			player.radius = { 0.0f , 0.0f };
+
+
+			/*   弾   */
+
+			for (int i = 0; i < kBulletNum; i++)
+			{
+				// 復活
+				bullet[i].respawn.isRespawn = true;
+				bullet[i].respawn.timer = 120;
+
+				// 発射しているかどうか（発射フラグ）
+				bullet[i].isShot = false;
+
+				// 発射している時間
+				bullet[i].shotTimer = 0;
+
+				// 位置
+				bullet[i].pos.world = { 0.0f , 0.0f };
+				bullet[i].pos.screen = CoordinateTransformation(player.pos.world);
+
+				// 移動速度
+				bullet[i].vel = { 0.0f , 0.0f };
+
+				// 加速度
+				bullet[i].acceleration = { 0.0f , 0.0f };
+
+				// 図形の半径
+				bullet[i].radius = { 0.0f  , 0.0f };
+			}
 
 
 			/*   光   */
@@ -735,6 +878,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームが動く（ゲームフラグがtrueになる）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -793,6 +939,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームが動く（ゲームフラグがtrueになる）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -841,6 +990,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームが動く（ゲームフラグがtrueになる）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -898,6 +1050,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームが動く（ゲームフラグがtrueになる）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -934,6 +1089,68 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 					}
 
+					// S or ↓ でチュートリアルを選ぶ
+					if (!preKeys[DIK_S] && keys[DIK_S] || !preKeys[DIK_DOWN] && keys[DIK_DOWN])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_TUTORIAL;
+						}
+					}
+
+					break;
+
+				case MENU_TYPE_STAGE_TUTORIAL:
+
+					// スペースキーでゲームを開始する
+					if (!preKeys[DIK_SPACE] && keys[DIK_SPACE])
+					{
+						// ゲームが動いていない（ゲームフラグがfalseである）とき
+						if (isGameOperation == false)
+						{
+							// ゲームが動く（ゲームフラグがtrueになる）
+							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
+						}
+					}
+
+					// ゲームが動いている（ゲームフラグがtrueである）とき
+					if (isGameOperation)
+					{
+						if (gameFrame >= 70)
+						{
+							// ゲーム画面に切り替わる
+							screenNo = SCREEN_TYPE_GAME;
+
+							// チュートリアルを選ぶ
+							stageNo = STAGE_TYPE_TUTORIAL;
+
+							// ステップ1から開始する
+							tutorial.step = STEP_1;
+
+							// プレイヤーの初期状態
+							PlayerInitialState(&player);
+
+
+							// ゲームが止まる（ゲームフラグがfalseになる）
+							isGameOperation = false;
+
+							// ゲームフレームを初期化する
+							gameFrame = 0;
+						}
+					}
+
+					// W or ↑ でステージ3を選ぶ
+					if (!preKeys[DIK_W] && keys[DIK_W] || !preKeys[DIK_UP] && keys[DIK_UP])
+					{
+						if (isGameOperation == false)
+						{
+							menuNo = MENU_TYPE_STAGE_3;
+						}
+					}
+
 					break;
 				}
 
@@ -951,7 +1168,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			///
 			/// ↓ ゲーム画面ここから
-			/// 
+			///
+
 
 			/*-----------------------
 			    ステージを設定する
@@ -1055,6 +1273,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					break;
 				}
 
+				if (keys[DIK_W])
+				{
+					screenNo = SCREEN_TYPE_START;
+				}
+
 				break;
 
 			case STAGE_TYPE_1:
@@ -1091,11 +1314,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (stageFrame == 0)
 				{
-					for (int i = 0; i < 8; i++)
+					for (int i = 0; i < 9; i++)
 					{
-						if (i == 2)
+						if (i == 1)
 						{
-							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 250.0f + i * 25.0f, 0.0f, 0.0f, 10.0f);
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, static_cast<float>(kWidth / 2) + 100.0f, 250.0f + i * 25.0f, 0.0f, 0.0f, 20.0f);
 						} 
 						else
 						{
@@ -1105,11 +1328,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					for (int i = 0; i < 18; i++)
 					{
-						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_1, 425.0f - i * 25.0f, 300.0f, 0.0f, 0.0f, 10.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_1, 425.0f - i * 25.0f, 275.0f, 0.0f, 0.0f, 10.0f);
 					}
 
-					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 25.0f, 350.0f, 2.0f, 0.0f, 10.0f);
-					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 425.0f, 400.0f, -2.0f, 0.0f, 10.0f);
+					for (int i = 0; i < 14; i++)
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 25.0f + i * 25.0f, 300.0f, 0.0f, 0.0f, 10.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 450.0f - i * 25.0f, 475.0f, 0.0f, 0.0f, 10.0f);
+					}
 
 					for (int i = 0; i < 8; i++)
 					{
@@ -1119,7 +1345,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 					}
 
-					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 475.0f, 475.0f, 0.0f, 0.0f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 220.0f, 325.0f, 0.0f, 0.6f, 10.0f);
+
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 525.0f, 475.0f, 0.0f, 0.0f, 20.0f);
 
 					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
@@ -1130,6 +1358,40 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				if (stageFrame == 0)
 				{
+					for (int i = 0; i < 23; i++)
+					{
+						if (i > 3 && i < 10)
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_1, 20.0f + i * 25.0f, 175.0f, 0.0f, 0.0f, 10.0f);
+						}
+						else if(i < 15 || i >= 18)
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_STONE, 20.0f + i * 25.0f, 175.0f, 0.0f, 0.0f, 10.0f);
+						}
+						else
+						{
+							MakeEnemy(enemy, ENEMY_TYPE_SOLAR_STONE_2, 20.0f + i * 25.0f, 175.0f, 0.0f, 0.0f, 10.0f);
+						}
+
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth) - 20.0f - i * 25.0f, 350.0f, 0.0f, 0.0f, 10.0f);
+					}
+
+					for (int i = 0; i < 20; i++)
+					{
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, 20.0f + i * 15.0f, 400.0f + i * 15.0f , 0.0f, 0.0f, 10.0f);
+						MakeEnemy(enemy, ENEMY_TYPE_STONE, static_cast<float>(kWidth) - 20.0f - i * 15.0f, 400.0f + i * 15.0f, 0.0f, 0.0f, 10.0f);
+					}
+
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 160.0f, 500.0f, 2.0f, 0.0f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 425.0f, 375.0f, 0.0f, 1.0f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 600.0f, 25.0f, 0.0f, 1.3f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 650.0f, 325.0f, 0.0f, -1.3f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 600.0f, 325.0f, 0.0f, -1.3f, 10.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_BIRD, 650.0f, 25.0f, 0.0f, 1.3f, 10.0f);
+
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_1, 580.0f, 580.0f, 0.0f, 0.0f, 20.0f);
+					MakeEnemy(enemy, ENEMY_TYPE_SOLAR_PANEL_2, 180.0f, 230.0f, 0.0f, 0.0f, 20.0f);
+
 					MakeItem(&item, 350.0f, 600.0f, 0.0f, 0.0f, 10.0f);
 				}
 
@@ -1159,10 +1421,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				if (stageNo != STAGE_TYPE_TUTORIAL)
 				{
 					screenNo = SCREEN_TYPE_END;
-				}
 
-				player.pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
-				player.radius = { 10.0f , 10.0f };
+					// 効果音：負け
+					Novice::PlayAudio(shSeLose , 0 , 0.4f);
+				}
+				else
+				{
+					player.pos.world = { static_cast<float>(kWidth / 2) , 0.0f };
+					player.radius = { 10.0f , 10.0f };
+				}
 			}
 
 			// プレイヤーが逃げている（逃げるフラグがtrueである）ときに、陸地に着くと、ゲームが終了（クリア）する
@@ -1176,6 +1443,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 						// ゲームクリアになる（クリアフラグがtrueになる）
 						isClear = true;
+
+						// 効果音：勝利
+						Novice::PlayAudio(shSeWin, 0, 0.4f);
 
 						// ゲームフレームを初期化する
 						gameFrame = 0;
@@ -1201,6 +1471,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				RespawnProcess(&enemy[i].respawn);
 			}
 
+			// 弾
+			for (int i = 0; i < kBulletNum; i++)
+			{
+				RespawnProcess(&bullet[i].respawn);
+			}
+
 			// アイテム
 			RespawnProcess(&item.respawn);
 
@@ -1217,6 +1493,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 光を照らす操作
 			LightIlluminate(&light, keys);
+
+			if (player.flug.isFlying)
+			{
+				// 効果音：飛行音
+				Novice::PlayAudio(shSeFlying, 0, 0.2f);
+			}
 
 			// 光をプレイヤーの位置に置く
 			light.pos.world = { player.pos.world.x , player.pos.world.y };
@@ -1257,6 +1539,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						}
 
 						break;
+
+					case ENEMY_TYPE_GUN:
+
+						enemy[i].arrivalTimer++;
+
+						if (enemy[i].arrivalTimer >= 100)
+						{
+
+						}
+
+						break;
 					}
 
 					// 敵を動かす
@@ -1285,6 +1578,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							{
 								// プレイヤーがやられる（復活フラグがfalseになる）
 								player.respawn.isRespawn = false;
+
+								// 効果音：ガラスが割れる
+								Novice::PlayAudio(shSeGlass, 0, 0.4f);
 							}
 						}
 						else
@@ -1299,8 +1595,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 								{
 									// プレイヤーがやられる（復活フラグがfalseになる）
 									player.respawn.isRespawn = false;
+
+									// 効果音：ガラスが割れる
+									Novice::PlayAudio(shSeGlass, 0, 0.4f);
 								}
 							}
+						}
+					}
+				}
+			}
+
+			// プレイヤーと弾
+			if (player.respawn.isRespawn)
+			{
+				for (int i = 0; i < kBulletNum; i++)
+				{
+					if (bullet[i].isShot)
+					{
+						if (powf(player.radius.x + bullet[i].radius.x, 2) >=
+							powf(bullet[i].pos.world.x - player.pos.world.x, 2) + powf(bullet[i].pos.world.y - player.pos.world.y, 2))
+						{
+							// プレイヤーがやられる（復活フラグがfalseになる）
+							player.respawn.isRespawn = false;
 						}
 					}
 				}
@@ -1379,6 +1695,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 									enemy[i].respawn.isRespawn = false;
 									enemy[i].isArrival = false;
 
+									// 効果音：　爆発
+									Novice::PlayAudio(shSeExplosion , 0 , 0.4f);
+
 									for (int j = 0; j < kEnemyNum; j++)
 									{
 										if (enemy[j].isArrival)
@@ -1404,6 +1723,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 								{
 									enemy[i].respawn.isRespawn = false;
 									enemy[i].isArrival = false;
+
+									// 効果音：　爆発
+									Novice::PlayAudio(shSeExplosion, 0, 0.4f);
 
 									for (int j = 0; j < kEnemyNum; j++)
 									{
@@ -1436,6 +1758,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 											enemy[i].isArrival = false;
 
 											tutorial.isSwitchOn = true;
+
+											// 効果音：　爆発
+											Novice::PlayAudio(shSeExplosion, 0, 0.4f);
 										}
 									}
 								}
@@ -1468,6 +1793,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						// 危険な何かが出現する
 						MakeEnemy(enemy, ENEMY_TYPE_DENGER, static_cast<float>(kWidth / 2), static_cast<float>(kHeight), 0.0f, 0.0f, 0.0f);
 
+						// 効果音：警報
+						Novice::PlayAudio(shSeDenger , 0 , 0.5f);
+
 						// プレイヤーが逃げ始める（逃げるフラグがtrueになる）
 						player.flug.isRunAway = true;
 
@@ -1487,6 +1815,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 光
 			light.pos.screen = CoordinateTransformation(light.pos.world);
+
+			// 弾
+			for (int i = 0; i < kBulletNum; i++)
+			{
+				bullet[i].pos.screen = CoordinateTransformation(bullet[i].pos.world);
+			}
 
 			// 敵
 			for (int i = 0; i < kEnemyNum; i++)
@@ -1573,6 +1907,35 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			// 図形の半径
 			light.radius = { 0.0f , 0.0f };
+
+
+			/*   弾   */
+
+			for (int i = 0; i < kBulletNum; i++)
+			{
+				// 復活
+				bullet[i].respawn.isRespawn = true;
+				bullet[i].respawn.timer = 120;
+
+				// 発射しているかどうか（発射フラグ）
+				bullet[i].isShot = false;
+
+				// 発射している時間
+				bullet[i].shotTimer = 0;
+
+				// 位置
+				bullet[i].pos.world = { 0.0f , 0.0f };
+				bullet[i].pos.screen = CoordinateTransformation(player.pos.world);
+
+				// 移動速度
+				bullet[i].vel = { 0.0f , 0.0f };
+
+				// 加速度
+				bullet[i].acceleration = { 0.0f , 0.0f };
+
+				// 図形の半径
+				bullet[i].radius = { 0.0f  , 0.0f };
+			}
 
 
 			/*   敵   */
@@ -1667,6 +2030,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームを動かす（ゲームフラグをtrueにする）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -1704,6 +2070,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームを動かす（ゲームフラグをtrueにする）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -1738,6 +2107,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームを動かす（ゲームフラグをtrueにする）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -1775,6 +2147,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						{
 							// ゲームを動かす（ゲームフラグをtrueにする）
 							isGameOperation = true;
+
+							// 効果音：決定
+							Novice::PlayAudio(shSeEnter, 0, 0.5f);
 						}
 					}
 
@@ -1806,6 +2181,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 						// ゲームを動かす（ゲームフラグをtrueにする）
 						isGameOperation = true;
+
+						// 効果音：決定
+						Novice::PlayAudio(shSeEnter, 0, 0.5f);
 					}
 				}
 
@@ -1863,6 +2241,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			case START_TYPE_STAGE_SELECT:
 
+				Novice::DrawSprite(0, 0, ghStageBg, 2, 2, 0.0f, 0xFFFFFFFF);
+
 				switch (menuNo)
 				{
 				case MENU_TYPE_STAGE_1:
@@ -1882,12 +2262,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					Novice::DrawBox(64, 64 + 150 * 2, 320, 64, 0.0f, 0xFFFFFF33, kFillModeSolid);
 
 					break;
+
+				case MENU_TYPE_STAGE_TUTORIAL:
+
+					Novice::DrawBox(64, 64 + 150 * 3, 320, 64, 0.0f, 0xFFFFFF33, kFillModeSolid);
+
+					break;
 				}
 
-				for (int i = 0; i < 3; i++)
+				for (int i = 0; i < 4; i++)
 				{
 					Novice::DrawSprite(64 , 64 + i * 150 , ghTextStage[i] , 1,1,0.0f , 0xFFFFFFFF);
 				}
+
+				Novice::DrawSprite(700, 700, ghTextSpacePush, 1, 1, 0.0f, 0xFFFFFFFF);
 
 				break;
 			}
@@ -2120,6 +2508,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					{
 						switch (enemy[i].type)
 						{
+						case ENEMY_TYPE_SOLAR_PANEL_1:
+
+							Novice::DrawQuad
+							(
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFF0000FF
+							);
+
+							break;
+
+						case ENEMY_TYPE_SOLAR_PANEL_2:
+
+							Novice::DrawQuad
+							(
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0x0000FFFF
+							);
+
+							break;
+
 						case ENEMY_TYPE_SOLAR_STONE_1:
 
 							Novice::DrawQuad
@@ -2128,12 +2542,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
 								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
 								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
-								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFFFFFFFF
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFF0000FF
 							);
 
 							break;
 
 						case ENEMY_TYPE_SOLAR_STONE_2:
+
+							Novice::DrawQuad
+							(
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y - enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x - enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								static_cast<int>(enemy[i].pos.screen.x + enemy[i].radius.x), static_cast<int>(enemy[i].pos.screen.y + enemy[i].radius.y),
+								32 * ((119 - enemy[i].respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0x0000FFFF
+							);
+
+							break;
+
+						case ENEMY_TYPE_SOLAR_PANEL_TURORIAL:
 
 							Novice::DrawQuad
 							(
@@ -2166,6 +2593,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				);
 			}
 
+			if (item.respawn.isRespawn == false)
+			{
+				if (item.respawn.timer < 120 && item.respawn.timer >= 120 - 25)
+				{
+					Novice::DrawQuad
+					(
+						static_cast<int>(item.pos.screen.x - item.radius.x), static_cast<int>(item.pos.screen.y - item.radius.y),
+						static_cast<int>(item.pos.screen.x - item.radius.x), static_cast<int>(item.pos.screen.y + item.radius.y),
+						static_cast<int>(item.pos.screen.x + item.radius.x), static_cast<int>(item.pos.screen.y - item.radius.y),
+						static_cast<int>(item.pos.screen.x + item.radius.x), static_cast<int>(item.pos.screen.y + item.radius.y),
+						32 * ((119 - item.respawn.timer) / 5), 0, 32, 32, ghEnemySwitchOn, 0xFFFF00FF
+					);
+				}
+			}
+
 
 			/*   プレイヤー   */
 
@@ -2180,6 +2622,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					static_cast<int>(player.pos.screen.x + player.radius.x), static_cast<int>(player.pos.screen.y + player.radius.y),
 					0,0,40,40,ghPlayerShine,0xFFFFFFFF
 				);
+			}
+			else
+			{
+				if (player.respawn.timer <= 119 && player.respawn.timer > 94)
+				{
+					Novice::DrawQuad
+					(
+						static_cast<int>(player.pos.screen.x - player.radius.x), static_cast<int>(player.pos.screen.y - player.radius.y),
+						static_cast<int>(player.pos.screen.x + player.radius.x), static_cast<int>(player.pos.screen.y - player.radius.y),
+						static_cast<int>(player.pos.screen.x - player.radius.x), static_cast<int>(player.pos.screen.y + player.radius.y),
+						static_cast<int>(player.pos.screen.x + player.radius.x), static_cast<int>(player.pos.screen.y + player.radius.y),
+						(119 - player.respawn.timer) / 5 * 40, 0, 40, 40, ghPlayerDeath, 0xFFFFFFFF
+					);
+				}
 			}
 
 
@@ -2228,6 +2684,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			{
 				Novice::DrawSprite(0, 0, ghGameOver, 2, 2, 0.0f, 0xFFFFFFFF);
 			}
+
+			Novice::DrawSprite(700, 700, ghTextSpacePush, 1, 1, 0.0f, 0xFFFFFFFF);
 
 			///
 			/// ↑ ゲーム終了画面ここまで
@@ -2583,6 +3041,43 @@ void LightIlluminate(struct Light* light, char* keys)
 		{
 			light->radius.x = 0.0f;
 			light->radius.y = 0.0f;
+		}
+	}
+}
+
+/// <summary>
+/// 弾を作る
+/// </summary>
+/// <param name="bullet">弾</param>
+/// <param name="posX">X軸の座標</param>
+/// <param name="posY">Y軸の座標</param>
+/// <param name="velX">X軸の移動速度</param>
+/// <param name="velY">Y軸の移動速度</param>
+/// <param name="radius">図形の半径</param>
+void MakeBullet(struct Bullet* bullet, float posX, float posY, float velX, float velY, float radius)
+{
+	if (bullet == nullptr)
+	{
+		return;
+	}
+
+	for (int i = 0; i < kBulletNum; i++)
+	{
+		if (bullet[i].isShot == false && bullet[i].respawn.isRespawn)
+		{
+			// 弾を発射する（発射フラグをtrueにする）
+			bullet[i].isShot = true;
+
+			// 位置
+			bullet[i].pos.world = { posX , posY };
+
+			// 移動速度
+			bullet[i].vel = { velX , velY };
+
+			// 図形の半径
+			bullet[i].radius = { radius , radius };
+
+			break;
 		}
 	}
 }
